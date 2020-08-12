@@ -29,7 +29,61 @@ typedef struct Core
     Register reg_file[32]; // register file.
 
     bool (*tick)(Core *core);
+	
+	instruction_fetch_reg IF_reg;
+	
+	instruction_decode_reg ID_ reg;	
+	
+	execute_reg E_reg
+	
+	mem_acces_reg M_reg;
+	
+	write_back_reg WB_reg;
+	
 }Core;
+
+
+typedef struct instruction_fetch_reg
+{
+    Signal PC;
+    Signal instruction;
+}instruction_fetch_reg;
+
+
+typedef struct instruction_decode_reg
+{
+    Signal read_reg_val_1;
+	Signal read_reg_val_2;
+    Signal imm_sign_extended;
+}instruction_decode_reg;
+
+
+typedef struct execute_reg
+{
+    Signal branch_address;
+	Signal zero_out;
+    Signal alu_result;
+	Signal reg_read_2;
+}execute_reg;
+
+
+typedef struct mem_acces_reg
+{
+    Signal mem_read_data;
+	Signal alu_result;
+	Signal branch_address;
+	
+}mem_acces_reg;
+
+
+typedef struct write_back_reg
+{
+    Signal mem_read_data;
+	Signal alu_result;
+	Signal branch_address;
+	
+}write_back_reg;
+
 
 Core *initCore(Instruction_Memory *i_mem);
 bool tickFunc(Core *core);

@@ -24,8 +24,8 @@ Core *initCore(Instruction_Memory *i_mem)
 	
 	core->data_mem[40*8] = -63; // 40(x1) = -63,
 	core->data_mem[48*8] = 63; // 48(x1) = 63,
-	printf("40(x1) = %ld\n", core->data_mem[40*8]);
-	printf("48(x1) = %ld\n", core->data_mem[48*8]);
+	printf("40(x1) = %d\n", core->data_mem[40*8]);
+	printf("48(x1) = %d\n", core->data_mem[48*8]);
 
 
 	
