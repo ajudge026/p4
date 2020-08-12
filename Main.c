@@ -29,7 +29,7 @@ int main(int argc, const char *argv[])
 	printf("-----------------The original; matirix -------------------\n" );
 	
 	
-	for(int i =0; i <128; i++)
+	/* for(int i =0; i <128; i++)
 	{		
 		if (i == 0 || core->data_mem[i] != 0)
 		{
@@ -43,7 +43,7 @@ int main(int argc, const char *argv[])
 		{
 				printf("data_mem[%d] - %d\n", i, core->data_mem[i]);
 		}		
-	}
+	} */
 
 
     printf("Simulation is finished.\n");
