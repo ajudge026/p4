@@ -19,15 +19,11 @@ Core *initCore(Instruction_Memory *i_mem)
     
 	for (int i = 0; i <(1024);i++)
 	{
-		core->data_mem[i] = 0;
-		//printf("data_mem[8*%d] = %d\n", i, i);
+		core->data_mem[i] = 0;		
 	}
 	
-	for (int i = 0; i <(16);i++)
-	{
-		core->data_mem[8*i] = i;
-		//printf("data_mem[8*%d] = %d\n", i, i);
-	}
+	core->data_mem[40*8] = -63; // 40(x1) = -63,
+	core->data_mem[48*8] = 63; // 48(x1) = 63,
 	
 
 
@@ -37,24 +33,17 @@ Core *initCore(Instruction_Memory *i_mem)
     // core->reg_file[0] = ...
 
     //set the reg_files for holding the offset
-	 /* core->reg_file[20] = 4;
-	 core->reg_file[21] = 0;
-	 core->reg_file[22] = 0; 
-	 core->reg_file[27] = 1; 	
-    core->reg_file[26] = 4; 
-	core->reg_file[30] = 0;  */
-	
-	core->reg_file[25] = 4;	 
-	 core->reg_file[0] = 0; 
-	 core->reg_file[27] = 50; //outbase
-	 core->reg_file[30] = 1; 
-	 core->reg_file[31] = 2; 
-	 core->reg_file[31] = 2; 
 	 
-    
-    //score->reg_file[25] = 0; // offset
-    
-
+	
+	core->reg_file[1] = 0;	 
+	 core->reg_file[0] = 0; 
+	 core->reg_file[2] = 10; //outbase
+	 core->reg_file[3] = -15; 
+	 core->reg_file[4] = 20; 
+	 core->reg_file[5] = 30; 
+	 core->reg_file[6] = -35; 
+	 
+	
     return core;
 }
 
