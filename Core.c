@@ -73,7 +73,9 @@ bool tickFunc(Core *core)
     Register read_reg_1 = (instruction >> (7 + 5 + 3)) & 31;    
 	Register read_reg_2 = (instruction >> (7 + 5 + 3 + 5)) & 31;	
 	Register write_reg = (instruction >> 7) & 31;
-	
+	Signal read_reg_2_value;
+	Signal alu_in_0, alu_in_1;
+	Signal shifted_immediate;
 	// <------------------------ ID Reg	
 	Signal arbitrary_int = 9999;
 	if( ((core->IF_reg.PC ==arbitrary_int)&&
@@ -81,16 +83,16 @@ bool tickFunc(Core *core)
 	)!= 1
 	)
 	{
-		Signal read_reg_2_value = core->ID_reg.read_reg_val_2;
+		read_reg_2_value = core->ID_reg.read_reg_val_2;
 		Signal read_reg_1_value = core->ID_reg.read_reg_val_1;
-		Signal shifted_immediate = core->ID_reg.imm_sign_extended ;
+		shifted_immediate = core->ID_reg.imm_sign_extended ;
 
 		core->ID_reg.read_reg_val_1 = core->reg_file[read_reg_1];
 		core->ID_reg.read_reg_val_2 = core->reg_file[read_reg_2];
 		core->ID_reg.imm_sign_extended = ImmeGen( input,instruction);;
 		
 		Signal alu_in_1 = MUX(signals.ALUSrc,core->reg_file[read_reg_2],shifted_immediate);
-		Signal alu_in_0 = core->reg_file[read_reg_1];
+		alu_in_0 = core->reg_file[read_reg_1];
 	}
 	
 	if( ((core->ID_reg.read_reg_val_1 ==arbitrary_int)&&
@@ -113,7 +115,7 @@ bool tickFunc(Core *core)
 		((core->E_reg.zero_out==arbitrary_int)) &&
 		((core->E_reg.alu_result==arbitrary_int)) &&
 		((core->E_reg.reg_read_2_val==arbitrary_int)) 
-	)!= 1  )
+	)!= 1  ))
 	{
 		// <------------------------ M Reg
 		Signal mem_result= 0;
