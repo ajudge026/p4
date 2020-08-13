@@ -1,4 +1,5 @@
 #include "Core.h"
+#include<math.h>
 
 Core *initCore(Instruction_Memory *i_mem)
 {
@@ -10,22 +11,15 @@ Core *initCore(Instruction_Memory *i_mem)
 
     // FIXME, initialize register file here.
     // initializeregs in core 
-	/* core->IF_reg.PC = 0;
-	core->IF_reg.instruction = 0;
 	
-	core->ID_reg.read_reg_val_1 = 0
-	 Signal read_reg_val_1;
-	Signal read_reg_val_2;
-    Signal imm_sign_extended; */
-	
-	instruction_decode_reg ID_reg;	
-	
-	execute_reg E_reg;
-	
-	mem_acces_reg M_reg;
-	
-	write_back_reg WB_reg;
-
+	int arbitrary_int = 9999;
+	core->IF_reg = {arbitrary_int,arbitrary_int}	
+	core->ID_reg = [arbitrary_int,arbitrary_int,arbitrary_int];
+	core->E_reg = [arbitrary_int,arbitrary_int,arbitrary_int,arbitrary_int];
+	core->ID_reg = [arbitrary_int,arbitrary_int,arbitrary_int];
+	core->M_reg = [arbitrary_int,arbitrary_int,arbitrary_int];
+	core->M_reg = [arbitrary_int,arbitrary_int,arbitrary_int];
+	core->WB_reg = [arbitrary_int,arbitrary_int];
     
 	for (int i = 0; i <(1024);i++)
 	{
@@ -66,7 +60,7 @@ bool tickFunc(Core *core)
     // Steps may include
     // (Step 1) Reading instruction from instruction memory
     
-	// <------------------------ IF Reg
+	// <------------------------ IF Reg (mux is written to at end of function )
 	unsigned instruction  = core->IF_reg.instruction;	
 	Signal PC_pls_four = core->IF_reg.PC;
 	
@@ -102,29 +96,18 @@ bool tickFunc(Core *core)
     //write to reg (from combinational logic )
 	ALU(alu_in_0, alu_in_1, ALU_ctrl_signal, &core->E_reg.alu_result, &core->E_reg.zero_out); // 0 is offset shuold change to imm val
 	core->E_reg.branch_address = shifted_immediate + PC_pls_four ;			
-	core->E_reg.reg_read_2_val = core->ID_reg.read_reg_val_2 ;
-	
-	// core outputs of memory 
-    Signal mem_result= 0;
-	 mem_result = core->data_mem[8*ALU_output];
+	core->E_reg.reg_read_2_val = core->ID_reg.read_reg_val_2 ;	
 	// <------------------------ M Reg
+    Signal mem_result= 0;
+	 mem_result = core->data_mem[8*ALU_output];	
 	core->M_reg.mem_read_data 	= mem_result;
 	core->M_reg.alu_result = ALU_output;	
 	core->M_reg.branch_address = 0; // <------------------ change to branch address
 
-    /* Signal mem_read_data;
-	Signal alu_result;
-	Signal branch_address;
-	*/	
-	
 	if(signals.MemWrite)
     {       
 		core->data_mem[8*ALU_output] = read_reg_2_value;		
     }
-	
-	
-	
-
 	Signal write_reg_val =  core->reg_file[write_reg];
 	
     if(signals.RegWrite)
@@ -133,20 +116,9 @@ bool tickFunc(Core *core)
         core->reg_file[write_reg] = MUX(signals.MemtoReg, ALU_output, mem_result);
     }
 
-	
+	// <------------------------ IF Reg (continued)
 	Signal mux_output = MUX((zero_alu_input & signals.Branch), 4, (signed int)shifted_immediate);
-	
-	
-	
-		
     core->PC = Add(core->PC, mux_output);
-	
-    
-
-
-	
-		
-	
     ++core->clk;
     // Are we reaching the final instruction?
     if (core->PC > core->instr_mem->last->addr)
