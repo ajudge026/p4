@@ -96,15 +96,22 @@ bool tickFunc(Core *core)
 		Signal alu_in_1 = MUX(signals.ALUSrc,core->reg_file[read_reg_2],shifted_immediate);
 		Signal alu_in_0 = core->reg_file[read_reg_1];
 	}
-	// <---------------------------------- Execute Reg 
-	 //write to signals (from sequential logic )
-	Signal ALU_output = core->E_reg.alu_result ;		
-    Signal zero_alu_input = core->E_reg.zero_out;	
-	read_reg_2_value = core->E_reg.reg_read_2_val;	
-    //write to reg (from combinational logic )
-	ALU(alu_in_0, alu_in_1, ALU_ctrl_signal, &core->E_reg.alu_result, &core->E_reg.zero_out); // 0 is offset shuold change to imm val
-	core->E_reg.branch_address = shifted_immediate + PC_pls_four ;			
-	core->E_reg.reg_read_2_val = core->ID_reg.read_reg_val_2 ;	
+	
+	if( (core->ID_reg.read_reg_val_1 ==arbitrary_int)&&
+		((core->ID_reg.read_reg_val_2==arbitrary_int)) &&
+		((core->ID_reg.imm_sign_extended ==arbitrary_int))
+	)!= 1  )
+	{	
+		// <---------------------------------- Execute Reg 
+		 //write to signals (from sequential logic )
+		Signal ALU_output = core->E_reg.alu_result ;		
+		Signal zero_alu_input = core->E_reg.zero_out;	
+		read_reg_2_value = core->E_reg.reg_read_2_val;	
+		//write to reg (from combinational logic )
+		ALU(alu_in_0, alu_in_1, ALU_ctrl_signal, &core->E_reg.alu_result, &core->E_reg.zero_out); // 0 is offset shuold change to imm val
+		core->E_reg.branch_address = shifted_immediate + PC_pls_four ;			
+		core->E_reg.reg_read_2_val = core->ID_reg.read_reg_val_2 ;	
+	}
 	// <------------------------ M Reg
     Signal mem_result= 0;
 	 mem_result = core->data_mem[8*ALU_output];	
