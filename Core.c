@@ -14,7 +14,7 @@ Core *initCore(Instruction_Memory *i_mem)
 	instruction_decode_reg ID_temp = {arbitrary_int,arbitrary_int,arbitrary_int};	
 	execute_reg E_temp = {arbitrary_int,arbitrary_int,arbitrary_int,arbitrary_int};	
 	mem_acces_reg M_temp = {arbitrary_int,arbitrary_int,arbitrary_int};	
-	write_back_reg WB_temp = {arbitrary_int,arbitrary_int}; 
+	write_back_reg WB_temp = {arbitrary_int}; 
     
 	core->IF_reg = IF_temp;
 	core->ID_reg = ID_temp;
@@ -57,10 +57,6 @@ Core *initCore(Instruction_Memory *i_mem)
 // FIXME, implement this function
 bool tickFunc(Core *core)
 {
-	//printf("==============  new tick =====================");
-    // Steps may include
-    // (Step 1) Reading instruction from instruction memory
-    
 	// <------------------------ IF Reg (mux is written to at end of function )
 	unsigned instruction  = core->IF_reg.instruction;	
 	Signal PC_pls_four = core->IF_reg.PC;
@@ -97,7 +93,7 @@ bool tickFunc(Core *core)
 		Signal alu_in_0 = core->reg_file[read_reg_1];
 	}
 	
-	if( (core->ID_reg.read_reg_val_1 ==arbitrary_int)&&
+	if( ((core->ID_reg.read_reg_val_1 ==arbitrary_int)&&
 		((core->ID_reg.read_reg_val_2==arbitrary_int)) &&
 		((core->ID_reg.imm_sign_extended ==arbitrary_int))
 	)!= 1  )
@@ -112,28 +108,40 @@ bool tickFunc(Core *core)
 		core->E_reg.branch_address = shifted_immediate + PC_pls_four ;			
 		core->E_reg.reg_read_2_val = core->ID_reg.read_reg_val_2 ;	
 	}
-	// <------------------------ M Reg
-    Signal mem_result= 0;
-	 mem_result = core->data_mem[8*ALU_output];	
-	core->M_reg.mem_read_data 	= mem_result;
-	core->M_reg.alu_result = ALU_output;	
-	core->M_reg.branch_address = 0; // <------------------ change to branch address
-
-	if(signals.MemWrite)
-    {       
-		core->data_mem[8*ALU_output] = read_reg_2_value;		
-    }
-	Signal write_reg_val =  core->reg_file[write_reg];
 	
-    if(signals.RegWrite)
-    {
-		
-        core->reg_file[write_reg] = MUX(signals.MemtoReg, ALU_output, mem_result);
-    }
-
-	// <------------------------ IF Reg (continued)
+	if(  ( ((core->E_reg.branch_address ==arbitrary_int)&&
+		((core->E_reg.zero_out==arbitrary_int)) &&
+		((core->E_reg.alu_result==arbitrary_int)) &&
+		((core->E_reg.reg_read_2_val==arbitrary_int)) 
+	)!= 1  )
+	{
+		// <------------------------ M Reg
+		Signal mem_result= 0;
+		mem_result = core->data_mem[8*ALU_output];	
+		core->M_reg.mem_read_data 	= mem_result;
+		core->M_reg.alu_result = ALU_output;	
+		core->M_reg.branch_address = 0; // <------------------ change to branch address
+		if(signals.MemWrite)
+		{       
+			core->data_mem[8*ALU_output] = read_reg_2_value;		
+		}
+		Signal write_reg_val =  core->reg_file[write_reg];
+		if(signals.RegWrite)
+		{			
+			core->reg_file[write_reg] = core->WB_reg.reg_write_mux_val;
+		}
+	}
+	// <------------------------ IF Reg (continued)	
 	Signal mux_output = MUX((zero_alu_input & signals.Branch), 4, (signed int)shifted_immediate);
     core->PC = Add(core->PC, mux_output);
+	//<------------- WB Reg	
+	if(( (core->M_reg.mem_read_data ==arbitrary_int) &&
+		(core->M_reg.alu_result ==arbitrary_int) &&
+		(core->M_reg.branch_address==arbitrary_int) &&			
+	)!= 1  )
+	{
+		core->M_reg.reg_write_mux_val = MUX(signals.MemtoReg, ALU_output, mem_result);
+	}
     ++core->clk;
     // Are we reaching the final instruction?
     if (core->PC > core->instr_mem->last->addr)
@@ -143,7 +151,6 @@ bool tickFunc(Core *core)
     }
     return true;
 }
-
 // FIXME (1). Control Unit. Refer to Figure 4.18.
 void ControlUnit(unsigned instruction, Signal input,
                  ControlSignals *signals)
