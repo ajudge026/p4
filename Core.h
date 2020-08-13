@@ -49,9 +49,7 @@ typedef struct mem_acces_reg
 
 typedef struct write_back_reg
 {
-    Signal mem_read_data;
-	Signal alu_result;	
-	
+    Signal reg_write_mux_val;		
 }write_back_reg;
 
 struct Core;

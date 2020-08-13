@@ -76,6 +76,8 @@ bool tickFunc(Core *core)
 	Signal read_reg_2_value;
 	Signal alu_in_0, alu_in_1;
 	Signal shifted_immediate;
+	Signal ALU_output;
+	Signal zero_alu_input;
 	// <------------------------ ID Reg	
 	Signal arbitrary_int = 9999;
 	if( ((core->IF_reg.PC ==arbitrary_int)&&
@@ -111,6 +113,7 @@ bool tickFunc(Core *core)
 		core->E_reg.reg_read_2_val = core->ID_reg.read_reg_val_2 ;	
 	}
 	
+	Signal mem_result;
 	if(  ( ((core->E_reg.branch_address ==arbitrary_int)&&
 		((core->E_reg.zero_out==arbitrary_int)) &&
 		((core->E_reg.alu_result==arbitrary_int)) &&
@@ -118,7 +121,7 @@ bool tickFunc(Core *core)
 	)!= 1  ))
 	{
 		// <------------------------ M Reg
-		Signal mem_result= 0;
+		mem_result= 0;
 		mem_result = core->data_mem[8*ALU_output];	
 		core->M_reg.mem_read_data 	= mem_result;
 		core->M_reg.alu_result = ALU_output;	
@@ -139,7 +142,7 @@ bool tickFunc(Core *core)
 	//<------------- WB Reg	
 	if(( (core->M_reg.mem_read_data ==arbitrary_int) &&
 		(core->M_reg.alu_result ==arbitrary_int) &&
-		(core->M_reg.branch_address==arbitrary_int) &&			
+		(core->M_reg.branch_address==arbitrary_int)			
 	)!= 1  )
 	{
 		core->M_reg.reg_write_mux_val = MUX(signals.MemtoReg, ALU_output, mem_result);
