@@ -13,13 +13,13 @@ Core *initCore(Instruction_Memory *i_mem)
     // initializeregs in core 
 	
 	int arbitrary_int = 9999;
-	core->IF_reg = {arbitrary_int,arbitrary_int}	
-	core->ID_reg = [arbitrary_int,arbitrary_int,arbitrary_int];
-	core->E_reg = [arbitrary_int,arbitrary_int,arbitrary_int,arbitrary_int];
-	core->ID_reg = [arbitrary_int,arbitrary_int,arbitrary_int];
-	core->M_reg = [arbitrary_int,arbitrary_int,arbitrary_int];
-	core->M_reg = [arbitrary_int,arbitrary_int,arbitrary_int];
-	core->WB_reg = [arbitrary_int,arbitrary_int];
+	core->IF_reg = {arbitrary_int,arbitrary_int};
+	core->ID_reg = {arbitrary_int,arbitrary_int,arbitrary_int};
+	core->E_reg = {arbitrary_int,arbitrary_int,arbitrary_int,arbitrary_int};
+	core->ID_reg = {arbitrary_int,arbitrary_int,arbitrary_int};
+	core->M_reg = {arbitrary_int,arbitrary_int,arbitrary_int};
+	core->M_reg = {arbitrary_int,arbitrary_int,arbitrary_int};
+	core->WB_reg = {arbitrary_int,arbitrary_int};
     
 	for (int i = 0; i <(1024);i++)
 	{
