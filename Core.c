@@ -145,7 +145,7 @@ bool tickFunc(Core *core)
 		(core->M_reg.branch_address==arbitrary_int)			
 	)!= 1  )
 	{
-		core->M_reg.reg_write_mux_val = MUX(signals.MemtoReg, ALU_output, mem_result);
+		core->WB_reg.reg_write_mux_val = MUX(signals.MemtoReg, ALU_output, mem_result);
 	}
     ++core->clk;
     // Are we reaching the final instruction?
