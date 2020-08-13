@@ -19,7 +19,7 @@ Core *initCore(Instruction_Memory *i_mem)
 	core->IF_reg = IF_temp;
 	core->ID_reg = ID_temp;
 	core->E_reg = E_temp;
-	core->WB_reg= core->WB_temp;
+	core->M_reg = M_temp;
 	core->WB_reg = WB_temp;
 	
 	for (int i = 0; i <(1024);i++)
