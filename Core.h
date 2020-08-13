@@ -14,34 +14,6 @@ typedef uint8_t Byte;
 typedef int64_t Signal;
 typedef int64_t Register;
 
-struct Core;
-typedef struct Core Core;
-typedef struct Core
-{
-    Tick clk; // Keep track of core clock
-    Addr PC; // Keep track of program counter
-
-    // What else you need? Data memory? Register file?
-    Instruction_Memory *instr_mem;
-   
-    Byte data_mem[1024]; // data memory
-
-    Register reg_file[32]; // register file.
-
-    bool (*tick)(Core *core);
-	
-	instruction_fetch_reg IF_reg;
-	
-	instruction_decode_reg ID_ reg;	
-	
-	execute_reg E_reg
-	
-	mem_acces_reg M_reg;
-	
-	write_back_reg WB_reg;
-	
-}Core;
-
 
 typedef struct instruction_fetch_reg
 {
@@ -83,6 +55,37 @@ typedef struct write_back_reg
 	Signal branch_address;
 	
 }write_back_reg;
+
+struct Core;
+typedef struct Core Core;
+typedef struct Core
+{
+    Tick clk; // Keep track of core clock
+    Addr PC; // Keep track of program counter
+
+    // What else you need? Data memory? Register file?
+    Instruction_Memory *instr_mem;
+   
+    Byte data_mem[1024]; // data memory
+
+    Register reg_file[32]; // register file.
+
+    bool (*tick)(Core *core);
+	
+	instruction_fetch_reg IF_reg;
+	
+	instruction_decode_reg ID_reg;	
+	
+	execute_reg E_reg;
+	
+	mem_acces_reg M_reg;
+	
+	write_back_reg WB_reg;
+	
+}Core;
+
+
+
 
 
 Core *initCore(Instruction_Memory *i_mem);
