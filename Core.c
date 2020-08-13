@@ -8,24 +8,16 @@ Core *initCore(Instruction_Memory *i_mem)
     core->PC = 0;
     core->instr_mem = i_mem;
     core->tick = tickFunc;
-	
-	Byte data_mem_temp[1024];
-	Register reg_file_temp[32];
-	Signal	arb_int = 9999;	
-	
-
-    // FIXME, initialize register file here.
-    // initializeregs in core 
-	/* 
 	Signal	arbitrary_int = 9999;
-	core->IF_reg = {arbitrary_int,arbitrary_int};
-	core->ID_reg = {arbitrary_int,arbitrary_int,arbitrary_int};
-	core->E_reg = {arbitrary_int,arbitrary_int,arbitrary_int,arbitrary_int};
-	core->ID_reg = {arbitrary_int,arbitrary_int,arbitrary_int};
-	core->M_reg = {arbitrary_int,arbitrary_int,arbitrary_int};
-	core->M_reg = {arbitrary_int,arbitrary_int,arbitrary_int};
-	core->WB_reg = {arbitrary_int,arbitrary_int}; */
+	
+	instruction_fetch_reg IF_temp = {arbitrary_int,arbitrary_int};
+	instruction_decode_reg ID_temp = {arbitrary_int,arbitrary_int,arbitrary_int};	
+	execute_reg E_temp = {arbitrary_int,arbitrary_int,arbitrary_int,arbitrary_int};	
+	mem_acces_reg M_temp = {arbitrary_int,arbitrary_int,arbitrary_int};	
+	write_back_reg WB_temp = {arbitrary_int,arbitrary_int}; 
     
+	memcpy(core->IF_reg, IF_temp, sizeof(core->IF_reg));
+	
 	for (int i = 0; i <(1024);i++)
 	{
 		core->data_mem[i] = 0;		
