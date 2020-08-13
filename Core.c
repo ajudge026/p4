@@ -108,41 +108,32 @@ bool tickFunc(Core *core)
     Signal alu_in_0;    
 	alu_in_0 = core->reg_file[read_reg_1];
 	
-	Signal read_reg_2_value =core->reg_file[read_reg_2];
-	Signal read_reg_1_value =core->reg_file[read_reg_1];
 	
-		// <------------------------ ID Reg
-	core->ID_reg.read_reg_val_1 = read_reg_1_value;
-	core->ID_reg.read_reg_val_2 = read_reg_2_value;
+	// <------------------------ ID Reg	
+	Signal read_reg_2_value = core->ID_reg.read_reg_val_2;
+	Signal read_reg_1_value = core->ID_reg.read_reg_val_1;
+	Signal shifted_immediate = core->ID_reg.imm_sign_extended ;
+
+	core->ID_reg.read_reg_val_1 = core->reg_file[read_reg_1];
+	core->ID_reg.read_reg_val_2 = core->reg_file[read_reg_2];
 	core->ID_reg.imm_sign_extended = ImmeGen( input,instruction);;
 	
-	/*
-	Signal read_reg_val_1;
-	Signal read_reg_val_2;
-    Signal imm_sign_extended;
-	*/
+    Signal alu_in_1 = MUX(signals.ALUSrc,core->reg_file[read_reg_2],shifted_immediate);
+    
 	
 	
-    Signal alu_in_1 = MUX(signals.ALUSrc,core->reg_file[read_reg_2],ImmeGen( input,instruction));
-    Signal ALU_output;
-	
-    Signal zero_alu_input;
-	
-    ALU(alu_in_0, alu_in_1, ALU_ctrl_signal, &ALU_output, &zero_alu_input); // 0 is offset shuold change to imm val
-
-
-    Signal shifted_immediate = ShiftLeft1(ImmeGen(input, instruction));		
 	// <---------------------------------- Execute Reg 
-	core->E_reg.branch_address = shifted_immediate + core->PC;
-	core->E_reg.zero_out = zero_alu_input;
-	core->E_reg.alu_result = ALU_output;;
-	core->E_reg.reg_read_2_val = read_reg_val_2;
+	Signal ALU_output = core->E_reg.alu_result ;
+		
+    Signal zero_alu_input = core->E_reg.zero_out;	;
 	
-/*	Signal branch_address;
-	Signal zero_out;
-    Signal alu_result;
-	Signal reg_read_2_val;
-*/ 	
+    ALU(alu_in_0, alu_in_1, ALU_ctrl_signal, &core->E_reg.alu_result, &core->E_reg.zero_out); // 0 is offset shuold change to imm val
+
+	core->E_reg.branch_address = shifted_immediate + PC_pls_four ;		
+	
+	 read_reg_2_value = core->E_reg.reg_read_2_val ;
+	core->E_reg.reg_read_2_val = core->ID_reg.read_reg_val_2 ;
+	
 	// core outputs of memory 
     Signal mem_result= 0;
 	 mem_result = core->data_mem[8*ALU_output];
