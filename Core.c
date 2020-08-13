@@ -67,7 +67,7 @@ bool tickFunc(Core *core)
     // (Step 1) Reading instruction from instruction memory
     
 	// <------------------------ IF Reg
-	unsigned instruction core->IF_reg.instruction;	
+	unsigned instruction  = core->IF_reg.instruction;	
 	Signal PC_pls_four = core->IF_reg.PC;
 	
 	core->IF_reg.instruction = core->instr_mem->instructions[core->PC / 4].instruction;
@@ -114,7 +114,13 @@ bool tickFunc(Core *core)
 		// <------------------------ ID Reg
 	core->ID_reg.read_reg_val_1 = read_reg_1_value;
 	core->ID_reg.read_reg_val_2 = read_reg_2_value;
-	core->ID_reg.imm_sign_extended = ImmeGen( input,instruction));;
+	core->ID_reg.imm_sign_extended = ImmeGen( input,instruction);;
+	
+	/*
+	Signal read_reg_val_1;
+	Signal read_reg_val_2;
+    Signal imm_sign_extended;
+	*/
 	
 	
     Signal alu_in_1 = MUX(signals.ALUSrc,core->reg_file[read_reg_2],ImmeGen( input,instruction));
@@ -123,16 +129,39 @@ bool tickFunc(Core *core)
     Signal zero_alu_input;
 	
     ALU(alu_in_0, alu_in_1, ALU_ctrl_signal, &ALU_output, &zero_alu_input); // 0 is offset shuold change to imm val
+
+
+    Signal shifted_immediate = ShiftLeft1(ImmeGen(input, instruction));		
+	// <---------------------------------- Execute Reg 
+	core->E_reg.branch_address = shifted_immediate + core->PC;
+	core->E_reg.zero_out = zero_alu_input;
+	core->E_reg.alu_result = ALU_output;;
+	core->E_reg.reg_read_2_val = read_reg_val_2;
 	
+/*	Signal branch_address;
+	Signal zero_out;
+    Signal alu_result;
+	Signal reg_read_2_val;
+*/ 	
+	// core outputs of memory 
+    Signal mem_result= 0;
+	 mem_result = core->data_mem[8*ALU_output];
+	// <------------------------ M Reg
+	core->M_reg.mem_read_data 	= mem_result;
+	core->M_reg.alu_result = ALU_output;	
+	core->M_reg.branch_address = 0; // <------------------ change to branch address
+
+    /* Signal mem_read_data;
+	Signal alu_result;
+	Signal branch_address;
+	*/	
 	
 	if(signals.MemWrite)
     {       
 		core->data_mem[8*ALU_output] = read_reg_2_value;		
     }
 	
-	// core outputs of memory 
-    Signal mem_result= 0;
-	 mem_result = core->data_mem[8*ALU_output];
+	
 	
 
 	Signal write_reg_val =  core->reg_file[write_reg];
@@ -143,20 +172,10 @@ bool tickFunc(Core *core)
         core->reg_file[write_reg] = MUX(signals.MemtoReg, ALU_output, mem_result);
     }
 
-
-
-    
-
-    Signal shifted_immediate = ShiftLeft1(ImmeGen(input, instruction));	
 	
 	Signal mux_output = MUX((zero_alu_input & signals.Branch), 4, (signed int)shifted_immediate);
-	// <---------------------------------- Execute branch 
-	core->ID_reg.branch_address = shifted_immediate + core->PC;
-	core->ID_reg.zero_out = zero_out;
-	core->ID_reg.imm_sign_extended = ImmeGen( input,instruction));;
-	core->ID_reg.imm_sign_extended = ImmeGen( input,instruction));;
-	core->ID_reg.imm_sign_extended = ImmeGen( input,instruction));;
-	core->ID_reg.imm_sign_extended = ImmeGen( input,instruction));;
+	
+	
 	
 		
     core->PC = Add(core->PC, mux_output);

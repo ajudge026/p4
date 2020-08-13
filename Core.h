@@ -35,7 +35,7 @@ typedef struct execute_reg
     Signal branch_address;
 	Signal zero_out;
     Signal alu_result;
-	Signal reg_read_2;
+	Signal reg_read_2_val;
 }execute_reg;
 
 
@@ -43,7 +43,7 @@ typedef struct mem_acces_reg
 {
     Signal mem_read_data;
 	Signal alu_result;
-	Signal branch_address;
+	Signal branch_address;	
 	
 }mem_acces_reg;
 
@@ -51,8 +51,7 @@ typedef struct mem_acces_reg
 typedef struct write_back_reg
 {
     Signal mem_read_data;
-	Signal alu_result;
-	Signal branch_address;
+	Signal alu_result;	
 	
 }write_back_reg;
 
