@@ -19,7 +19,7 @@ Core *initCore(Instruction_Memory *i_mem)
 	core->IF_reg = IF_temp;
 	core->ID_reg = ID_temp;
 	core->E_reg = E_temp;
-	core->M_reg = core->M_temp;
+	core->WB_reg= core->WB_temp;
 	core->WB_reg = WB_temp;
 	
 	for (int i = 0; i <(1024);i++)
@@ -79,7 +79,7 @@ bool tickFunc(Core *core)
 	Register write_reg = (instruction >> 7) & 31;
 	
 	// <------------------------ ID Reg	
-	Signal arbitrary_int == 9999;
+	Signal arbitrary_int = 9999;
 	if( ((core->IF_reg.PC ==arbitrary_int)&&
 		((core->IF_reg.instruction==arbitrary_int))
 	)!= 1
