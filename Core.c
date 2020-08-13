@@ -3,29 +3,16 @@
 
 Core *initCore(Instruction_Memory *i_mem)
 {
-    /* Core *core = (Core *)malloc(sizeof(Core));
+    Core *core = (Core *)malloc(sizeof(Core));
     core->clk = 0;
     core->PC = 0;
     core->instr_mem = i_mem;
-    core->tick = tickFunc; */
+    core->tick = tickFunc;
 	
 	Byte data_mem_temp[1024];
 	Register reg_file_temp[32];
 	Signal	arb_int = 9999;	
-	Core *core = {
-		0,
-		0,
-		i_mem,
-		data_mem_temp,
-		reg_file_temp,
-		tickFunc,
-		{arb_int, arb_int}, // <------------- need to fix
-		{arb_int, arb_int, arb_int},
-		{arb_int, arb_int, arb_int, arb_int},
-		{arb_int, arb_int, arb_int},
-		{arb_int, arb_int},
-		
-	}
+	
 
     // FIXME, initialize register file here.
     // initializeregs in core 
