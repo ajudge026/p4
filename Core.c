@@ -16,7 +16,11 @@ Core *initCore(Instruction_Memory *i_mem)
 	mem_acces_reg M_temp = {arbitrary_int,arbitrary_int,arbitrary_int};	
 	write_back_reg WB_temp = {arbitrary_int,arbitrary_int}; 
     
-	memcpy(core->IF_reg, IF_temp, sizeof(core->IF_reg));
+	core->IF_reg = IF_temp;
+	core->ID_reg = ID_temp;
+	core->E_reg = E_temp;
+	core->M_reg = core->M_temp;
+	core->WB_reg = WB_temp;
 	
 	for (int i = 0; i <(1024);i++)
 	{
@@ -75,16 +79,23 @@ bool tickFunc(Core *core)
 	Register write_reg = (instruction >> 7) & 31;
 	
 	// <------------------------ ID Reg	
-	Signal read_reg_2_value = core->ID_reg.read_reg_val_2;
-	Signal read_reg_1_value = core->ID_reg.read_reg_val_1;
-	Signal shifted_immediate = core->ID_reg.imm_sign_extended ;
+	Signal arbitrary_int == 9999;
+	if( ((core->IF_reg.PC ==arbitrary_int)&&
+		((core->IF_reg.instruction==arbitrary_int))
+	)!= 1
+	)
+	{
+		Signal read_reg_2_value = core->ID_reg.read_reg_val_2;
+		Signal read_reg_1_value = core->ID_reg.read_reg_val_1;
+		Signal shifted_immediate = core->ID_reg.imm_sign_extended ;
 
-	core->ID_reg.read_reg_val_1 = core->reg_file[read_reg_1];
-	core->ID_reg.read_reg_val_2 = core->reg_file[read_reg_2];
-	core->ID_reg.imm_sign_extended = ImmeGen( input,instruction);;
-	
-    Signal alu_in_1 = MUX(signals.ALUSrc,core->reg_file[read_reg_2],shifted_immediate);
-	Signal alu_in_0 = core->reg_file[read_reg_1];
+		core->ID_reg.read_reg_val_1 = core->reg_file[read_reg_1];
+		core->ID_reg.read_reg_val_2 = core->reg_file[read_reg_2];
+		core->ID_reg.imm_sign_extended = ImmeGen( input,instruction);;
+		
+		Signal alu_in_1 = MUX(signals.ALUSrc,core->reg_file[read_reg_2],shifted_immediate);
+		Signal alu_in_0 = core->reg_file[read_reg_1];
+	}
 	// <---------------------------------- Execute Reg 
 	 //write to signals (from sequential logic )
 	Signal ALU_output = core->E_reg.alu_result ;		
