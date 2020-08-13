@@ -71,43 +71,17 @@ bool tickFunc(Core *core)
 	Signal PC_pls_four = core->IF_reg.PC;
 	
 	core->IF_reg.instruction = core->instr_mem->instructions[core->PC / 4].instruction;
-	core->IF_reg.PC = Add(core->PC, 4);
-    
-	// (Step 2) ...
-	// prints instructions in decimal
-	//printf("Instruction: %u\n", instruction);
-    
-
+	core->IF_reg.PC = Add(core->PC, 4);    
+	// separate parts of the input instructions 	
     Signal input = (instruction & 127);
-	// prints opcode in decimal
-	
-    //printf("Opcode: %ld\n", input); 
-	
-	//holds signals from the controller
     ControlSignals signals;
-    ControlUnit(instruction, input, &signals);
-	//read the memory 
-	
-
-    Signal func3 =( (instruction >> (7 + 5)) & 7);
-    //printf("func3 - %ld\n", func3);
-	Signal func7 = ((instruction >> (7 + 5 + 3 + 5 + 5)) & 127);
-	//printf("func7 in tickfunction - %ld\n", func7);
+    ControlUnit(instruction, input, &signals);	
+    Signal func3 =( (instruction >> (7 + 5)) & 7);    
+	Signal func7 = ((instruction >> (7 + 5 + 3 + 5 + 5)) & 127);	
     Signal ALU_ctrl_signal = ALUControlUnit(signals.ALUOp, func7, func3);
-
-
-	
-
-    Register read_reg_1 = (instruction >> (7 + 5 + 3)) & 31;
-    
-	Register read_reg_2 = (instruction >> (7 + 5 + 3 + 5)) & 31;
-	
+    Register read_reg_1 = (instruction >> (7 + 5 + 3)) & 31;    
+	Register read_reg_2 = (instruction >> (7 + 5 + 3 + 5)) & 31;	
 	Register write_reg = (instruction >> 7) & 31;
-
-    //create signal input to ALU from read data 1 output
-    Signal alu_in_0;    
-	alu_in_0 = core->reg_file[read_reg_1];
-	
 	
 	// <------------------------ ID Reg	
 	Signal read_reg_2_value = core->ID_reg.read_reg_val_2;
@@ -119,19 +93,15 @@ bool tickFunc(Core *core)
 	core->ID_reg.imm_sign_extended = ImmeGen( input,instruction);;
 	
     Signal alu_in_1 = MUX(signals.ALUSrc,core->reg_file[read_reg_2],shifted_immediate);
-    
-	
-	
+	Signal alu_in_0 = core->reg_file[read_reg_1];
 	// <---------------------------------- Execute Reg 
-	Signal ALU_output = core->E_reg.alu_result ;
-		
-    Signal zero_alu_input = core->E_reg.zero_out;	;
-	
-    ALU(alu_in_0, alu_in_1, ALU_ctrl_signal, &core->E_reg.alu_result, &core->E_reg.zero_out); // 0 is offset shuold change to imm val
-
-	core->E_reg.branch_address = shifted_immediate + PC_pls_four ;		
-	
-	 read_reg_2_value = core->E_reg.reg_read_2_val ;
+	 //write to signals (from sequential logic )
+	Signal ALU_output = core->E_reg.alu_result ;		
+    Signal zero_alu_input = core->E_reg.zero_out;	
+	read_reg_2_value = core->E_reg.reg_read_2_val;	
+    //write to reg (from combinational logic )
+	ALU(alu_in_0, alu_in_1, ALU_ctrl_signal, &core->E_reg.alu_result, &core->E_reg.zero_out); // 0 is offset shuold change to imm val
+	core->E_reg.branch_address = shifted_immediate + PC_pls_four ;			
 	core->E_reg.reg_read_2_val = core->ID_reg.read_reg_val_2 ;
 	
 	// core outputs of memory 
