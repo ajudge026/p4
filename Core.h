@@ -16,8 +16,7 @@ typedef int64_t Register;
 
 
 typedef struct instruction_fetch_reg
-{
-    Signal PC;
+{    Signal PC;
     Signal instruction;
 }instruction_fetch_reg;
 
