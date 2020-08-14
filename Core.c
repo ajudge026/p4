@@ -109,8 +109,8 @@ bool tickFunc(Core *core)
 		E_reg_load.signals = ID_reg_load.signals;
 		Signal alu_in_1 = MUX(E_reg_load.signals.ALUSrc,ID_reg_load.read_reg_val_2,ID_reg_load.imm_sign_extended);
 		alu_in_0 = ID_reg_load.read_reg_val_1;
-		Signal func3 =( (instruction >> (7 + 5)) & 7);    
-		Signal func7 = ((instruction >> (7 + 5 + 3 + 5 + 5)) & 127);	
+		Signal func3 =( (ID_reg_load.instruction >> (7 + 5)) & 7);    
+		Signal func7 = ((ID_reg_load.instruction >> (7 + 5 + 3 + 5 + 5)) & 127);	
 		Signal ALU_ctrl_signal = ALUControlUnit(E_reg_load.signals.ALUOp, func7, func3);
 		ALU(alu_in_0, alu_in_1, ALU_ctrl_signal, &core->E_reg.alu_result, &core->E_reg.zero_out); // 0 is offset shuold change to imm val
 		core->E_reg.alu_result = ID_reg_load.imm_sign_extended + core->IF_reg.PC ;			
@@ -143,8 +143,8 @@ bool tickFunc(Core *core)
 	//<------------- WB Reg	
 	if( core->stages_complete > 3)
 	{
-		core->WB_reg.reg_write_mux_val = MUX(signals.MemtoReg, ALU_output, mem_result);
-		core->WB_reg.signals = core->E_reg_load.signals;
+		core->WB_reg.reg_write_mux_val = MUX(M_reg_load.signals.MemtoReg, M_reg_load.ALU_result, mem_result);
+		//
 	}
 	++core->stages_complete;
     ++core->clk;

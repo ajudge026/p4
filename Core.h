@@ -70,6 +70,7 @@ typedef struct mem_acces_reg
 typedef struct write_back_reg
 {    Signal reg_write_mux_val;		
 	ControlSignals signals;
+	Signal alu_result;
 }write_back_reg;
 
 struct Core;
