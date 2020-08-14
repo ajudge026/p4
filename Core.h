@@ -14,10 +14,30 @@ typedef uint8_t Byte;
 typedef int64_t Signal;
 typedef int64_t Register;
 
+// FIXME. Implement the following functions in Core.c
+// FIXME (1). Control Unit.
+typedef struct ControlSignals
+{
+    Signal Branch;
+    Signal MemRead;
+    Signal MemtoReg;
+    Signal ALUOp;
+    Signal MemWrite;
+    Signal ALUSrc;
+    Signal RegWrite;
+}ControlSignals;
 
 typedef struct instruction_fetch_reg
 {    Signal PC;
     Signal instruction;
+	ControlSignals signals;
+}instruction_fetch_reg;
+
+typedef struct instruction_fetch_reg
+{    
+	Signal PC;
+    Signal instruction;
+	ControlSignals signals;
 }instruction_fetch_reg;
 
 
@@ -26,15 +46,20 @@ typedef struct instruction_decode_reg
     Signal read_reg_val_1;
 	Signal read_reg_val_2;
     Signal imm_sign_extended;
+	Signal PC_pls_four
+	Signal write_reg
+	ControlSignals signals;
 }instruction_decode_reg;
 
 
 typedef struct execute_reg
-{
-    Signal branch_address;
+{    
 	Signal zero_out;
     Signal alu_result;
 	Signal reg_read_2_val;
+	Signal reg_read_2_val;
+	Signal write_reg;
+	ControlSignals signals;
 }execute_reg;
 
 
@@ -43,13 +68,13 @@ typedef struct mem_acces_reg
     Signal mem_read_data;
 	Signal alu_result;
 	Signal branch_address;	
-	
+	ControlSignals signals;
 }mem_acces_reg;
 
 
 typedef struct write_back_reg
-{
-    Signal reg_write_mux_val;		
+{    Signal reg_write_mux_val;		
+	ControlSignals signals;
 }write_back_reg;
 
 struct Core;
@@ -78,6 +103,8 @@ typedef struct Core
 	
 	write_back_reg WB_reg;
 	
+	int stages_complete;
+	
 }Core;
 
 
@@ -87,18 +114,7 @@ typedef struct Core
 Core *initCore(Instruction_Memory *i_mem);
 bool tickFunc(Core *core);
 
-// FIXME. Implement the following functions in Core.c
-// FIXME (1). Control Unit.
-typedef struct ControlSignals
-{
-    Signal Branch;
-    Signal MemRead;
-    Signal MemtoReg;
-    Signal ALUOp;
-    Signal MemWrite;
-    Signal ALUSrc;
-    Signal RegWrite;
-}ControlSignals;
+
 void ControlUnit(unsigned instruction, 
 				Signal input,
                  ControlSignals *signals);

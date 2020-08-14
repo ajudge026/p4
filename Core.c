@@ -8,11 +8,13 @@ Core *initCore(Instruction_Memory *i_mem)
     core->PC = 0;
     core->instr_mem = i_mem;
     core->tick = tickFunc;
+	
+	core->stages_complete = 0;
 	Signal	arbitrary_int = 9999;
 	
-	instruction_fetch_reg IF_temp = {arbitrary_int,arbitrary_int};
+	/* instruction_fetch_reg IF_temp = {arbitrary_int,arbitrary_int};
 	instruction_decode_reg ID_temp = {arbitrary_int,arbitrary_int,arbitrary_int};	
-	execute_reg E_temp = {arbitrary_int,arbitrary_int,arbitrary_int,arbitrary_int};	
+	execute_reg E_temp = {arbitrary_int,arbitrary_int,arbitrary_int};	
 	mem_acces_reg M_temp = {arbitrary_int,arbitrary_int,arbitrary_int};	
 	write_back_reg WB_temp = {arbitrary_int}; 
     
@@ -20,7 +22,7 @@ Core *initCore(Instruction_Memory *i_mem)
 	core->ID_reg = ID_temp;
 	core->E_reg = E_temp;
 	core->M_reg = M_temp;
-	core->WB_reg = WB_temp;
+	core->WB_reg = WB_temp; */
 	
 	for (int i = 0; i <(1024);i++)
 	{
@@ -57,68 +59,67 @@ Core *initCore(Instruction_Memory *i_mem)
 // FIXME, implement this function
 bool tickFunc(Core *core)
 {
-	// <------------------------ IF Reg (mux is written to at end of function )
-	unsigned instruction  = core->IF_reg.instruction;	
-	Signal PC_pls_four = core->IF_reg.PC;
+	// simulate the registers passins values on clock cycle 	
+	// Pipelined
+	// <------------------------ IF Reg (mux is written to at end of function )	
+	//unsigned instruction  = core->IF_reg.instruction;	// grabbing values from previous clock cycle 
+	instruction_fetch_reg IF_reg_load = core->IF_reg;	
+	instruction_decode_reg ID_reg_load = core->ID_reg;		
+	execute_reg E_reg_load = core->E_reg;	
+	mem_acces_reg M_reg_load = core->M_reg;	
+	write_back_reg WB_reg_load = core->WB_reg;
+	
+	Signal PC_pls_four = core->PC + 4;
 	
 	core->IF_reg.instruction = core->instr_mem->instructions[core->PC / 4].instruction;
-	core->IF_reg.PC = Add(core->PC, 4);    
-	// separate parts of the input instructions 	
-    Signal input = (instruction & 127);
-    ControlSignals signals;
-    ControlUnit(instruction, input, &signals);	
-    Signal func3 =( (instruction >> (7 + 5)) & 7);    
-	Signal func7 = ((instruction >> (7 + 5 + 3 + 5 + 5)) & 127);	
-    Signal ALU_ctrl_signal = ALUControlUnit(signals.ALUOp, func7, func3);
-    Register read_reg_1 = (instruction >> (7 + 5 + 3)) & 31;    
-	Register read_reg_2 = (instruction >> (7 + 5 + 3 + 5)) & 31;	
-	Register write_reg = (instruction >> 7) & 31;
+	core->IF_reg.PC = Add(core->PC, 4);
+	
+	if(core->stages_complete > 2)
+	{
+		Signal mux_output = MUX((E_reg_load.alu_result & E_reg_load.signals.Branch), ID_reg_load.PC_pls_four, E_reg_load.branch_address);
+		core->PC = mux_output;	
+	}	
+	// <------------------------ ID Reg	
+	Signal arbitrary_int = 9999;
 	Signal read_reg_2_value;
 	Signal alu_in_0, alu_in_1;
 	Signal shifted_immediate;
-	Signal ALU_output;
-	Signal zero_alu_input;
-	// <------------------------ ID Reg	
-	Signal arbitrary_int = 9999;
-	if( ((core->IF_reg.PC ==arbitrary_int)&&
-		((core->IF_reg.instruction==arbitrary_int))
-	)!= 1
-	)
+	if( core->stages_complete >  0)
 	{
-		read_reg_2_value = core->ID_reg.read_reg_val_2;
-		Signal read_reg_1_value = core->ID_reg.read_reg_val_1;
-		shifted_immediate = core->ID_reg.imm_sign_extended ;
+		
+			// getting control signals
+		Signal input = (IF_reg_load.instruction & 127);
+		//ControlSignals signals;
+		ControlUnit(IF_reg_load.instruction, input, &core->ID_reg.signals);			
+		Register read_reg_1 = (IF_reg_load.instruction >> (7 + 5 + 3)) & 31;    
+		Register read_reg_2 = (IF_reg_load.instruction >> (7 + 5 + 3 + 5)) & 31;	
+		core->ID_reg.write_reg = (IF_reg_load.instruction >> 7) & 31;
 
 		core->ID_reg.read_reg_val_1 = core->reg_file[read_reg_1];
 		core->ID_reg.read_reg_val_2 = core->reg_file[read_reg_2];
-		core->ID_reg.imm_sign_extended = ImmeGen( input,instruction);;
-		
-		Signal alu_in_1 = MUX(signals.ALUSrc,core->reg_file[read_reg_2],shifted_immediate);
-		alu_in_0 = core->reg_file[read_reg_1];
-	}
-	
-	if( ((core->ID_reg.read_reg_val_1 ==arbitrary_int)&&
-		((core->ID_reg.read_reg_val_2==arbitrary_int)) &&
-		((core->ID_reg.imm_sign_extended ==arbitrary_int))
-	)!= 1  )
+		core->ID_reg.imm_sign_extended = ImmeGen( input,ID_reg_load.instruction);;		
+	}	
+	/* Signal ALU_output;
+	Signal zero_alu_input; */
+	if( core->stages_complete > 1 )
 	{	
 		// <---------------------------------- Execute Reg 
-		 //write to signals (from sequential logic )
-		Signal ALU_output = core->E_reg.alu_result ;		
-		Signal zero_alu_input = core->E_reg.zero_out;	
-		read_reg_2_value = core->E_reg.reg_read_2_val;	
-		//write to reg (from combinational logic )
+		 //write to signals (from sequential logic )		 
+		 
+		Signal alu_in_1 = MUX(E_reg_load.signals.ALUSrc,ID_reg_load.read_reg_val_2,ID_reg_load.imm_sign_extended);
+		alu_in_0 = ID_reg_load.read_reg_val_1;
+		Signal func3 =( (instruction >> (7 + 5)) & 7);    
+		Signal func7 = ((instruction >> (7 + 5 + 3 + 5 + 5)) & 127);	
+		Signal ALU_ctrl_signal = ALUControlUnit(E_reg_load.signals.ALUOp, func7, func3);
 		ALU(alu_in_0, alu_in_1, ALU_ctrl_signal, &core->E_reg.alu_result, &core->E_reg.zero_out); // 0 is offset shuold change to imm val
-		core->E_reg.branch_address = shifted_immediate + PC_pls_four ;			
-		core->E_reg.reg_read_2_val = core->ID_reg.read_reg_val_2 ;	
+		core->E_reg.alu_result = ID_reg_load.imm_sign_extended + core->IF_reg.PC ;			
+		core->E_reg.reg_read_2_val = core->ID_reg.read_reg_val_2 ;
+		core->E_reg.write_reg = ID_reg_load.write_reg;
+		core->E_reg.signals = ID_reg_load.signals;
 	}
 	
 	Signal mem_result;
-	if(  ( ((core->E_reg.branch_address ==arbitrary_int)&&
-		((core->E_reg.zero_out==arbitrary_int)) &&
-		((core->E_reg.alu_result==arbitrary_int)) &&
-		((core->E_reg.reg_read_2_val==arbitrary_int)) 
-	)!= 1  ))
+	if( core->stages_complete > 2)
 	{
 		// <------------------------ M Reg
 		mem_result= 0;
@@ -126,27 +127,22 @@ bool tickFunc(Core *core)
 		core->M_reg.mem_read_data 	= mem_result;
 		core->M_reg.alu_result = ALU_output;	
 		core->M_reg.branch_address = 0; // <------------------ change to branch address
-		if(signals.MemWrite)
+		if(M_reg_load.signals.MemWrite)
 		{       
-			core->data_mem[8*ALU_output] = read_reg_2_value;		
+			core->data_mem[8*ALU_output] = E_reg_load.reg_read_2_val;		
 		}
 		Signal write_reg_val =  core->reg_file[write_reg];
 		if(signals.RegWrite)
 		{			
 			core->reg_file[write_reg] = core->WB_reg.reg_write_mux_val;
 		}
-	}
-	// <------------------------ IF Reg (continued)	
-	Signal mux_output = MUX((zero_alu_input & signals.Branch), 4, (signed int)shifted_immediate);
-    core->PC = Add(core->PC, mux_output);
+	}	
 	//<------------- WB Reg	
-	if(( (core->M_reg.mem_read_data ==arbitrary_int) &&
-		(core->M_reg.alu_result ==arbitrary_int) &&
-		(core->M_reg.branch_address==arbitrary_int)			
-	)!= 1  )
+	if( core->stages_complete > 3)
 	{
 		core->WB_reg.reg_write_mux_val = MUX(signals.MemtoReg, ALU_output, mem_result);
 	}
+	++core->stages_complete;
     ++core->clk;
     // Are we reaching the final instruction?
     if (core->PC > core->instr_mem->last->addr)
