@@ -43,19 +43,16 @@ bool tickFunc(Core *core)
 	core->IF_reg.PC = core->PC;
 	core->IF_reg.instruction = core->instr_mem->instructions[core->PC / 4].instruction;		
 	if(core->stages_complete > 2)
-	{
-		//Signal mux_output = MUX((E_reg_load.zero_out & E_reg_load.signals.Branch), M_reg_load.PC, E_reg_load.branch_address);// /<---- for testing dont branch
+	{		
 		Signal mux_output = MUX((E_reg_load.zero_out & ID_reg_load.signals.Branch), (M_reg_load.PC+4), E_reg_load.branch_address);// /<---- for testing dont branch
+		Signal mux_output = MUX(0, (ID_reg_load.PC+4), E_reg_load.branch_address);// /<---- for testing dont branch
 		printf("the branch bool is -%ld\n", ID_reg_load.signals.Branch);
 		printf("the new PC is -%ld\n", core->PC);
 		core->PC = mux_output;	
 	}
-	// <------------------------ ID Reg		
-	Signal arbitrary_int = 9999;
-	Signal read_reg_2_value;
-	Signal alu_in_0, alu_in_1;
-	Signal shifted_immediate;
-	core->ID_reg.PC = ID_reg_load.PC;
+	// <------------------------ ID Reg				
+	Signal alu_in_0, alu_in_1;	
+	core->ID_reg.PC = IF_reg_load.PC;
 	core->E_reg.branch_address = M_reg_load.branch_address;
 	if( core->stages_complete >  0)
 	{
@@ -72,7 +69,7 @@ bool tickFunc(Core *core)
 		core->ID_reg.instruction = IF_reg_load.instruction;		
 	}
 	core->M_reg.branch_address = WB_reg_load.branch_address;
-	core->E_reg.signals = ID_reg_load.signals;
+	core->E_reg.signals = ID_reg_load.signals;	
 	if( core->stages_complete > 1 )// Execute stage
 	{	
 		// <---------------------------------- Execute Reg 
@@ -85,8 +82,7 @@ bool tickFunc(Core *core)
 		Signal ALU_ctrl_signal = ALUControlUnit(ID_reg_load.signals.ALUOp, func7, func3);
 		ALU(alu_in_0, alu_in_1, ALU_ctrl_signal, &core->E_reg.alu_result, &core->E_reg.zero_out); // 0 is offset shuold change to imm val		
 		printf("%ld + %ld = %ld<----------------------------------\n", alu_in_0, alu_in_1, core->E_reg.alu_result);
-		core->E_reg.branch_address = ShiftLeft1(ID_reg_load.imm_sign_extended)+ ID_reg_load.PC ;			
-		core->E_reg.reg_read_2_val = core->ID_reg.read_reg_val_2 ;
+		core->E_reg.branch_address = ShiftLeft1(ID_reg_load.imm_sign_extended)+ ID_reg_load.PC ;					
 		core->E_reg.write_reg = ID_reg_load.write_reg;		
 	}	
 	Signal mem_result;
@@ -101,7 +97,7 @@ bool tickFunc(Core *core)
 		core->M_reg.branch_address = 0; // <------------------ change to branch address
 		if(M_reg_load.signals.MemWrite)
 		{       
-			core->data_mem[8*E_reg_load.alu_result] = E_reg_load.reg_read_2_val;		
+			core->data_mem[8*E_reg_load.alu_result] = E_reg_load.read_reg_val_2;		
 		}
 		//Signal write_reg_val =  core->reg_file[E_reg_load.write_reg];		
 		//core->M_reg.signals = ID_reg_load.signals;
