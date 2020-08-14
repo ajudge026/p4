@@ -7,43 +7,17 @@ Core *initCore(Instruction_Memory *i_mem)
     core->clk = 0;
     core->PC = 0;
     core->instr_mem = i_mem;
-    core->tick = tickFunc;
-	
+    core->tick = tickFunc;	
 	core->stages_complete = 0;
 	Signal	arbitrary_int = 9999;
-	
-	/* instruction_fetch_reg IF_temp = {arbitrary_int,arbitrary_int};
-	instruction_decode_reg ID_temp = {arbitrary_int,arbitrary_int,arbitrary_int};	
-	execute_reg E_temp = {arbitrary_int,arbitrary_int,arbitrary_int};	
-	mem_acces_reg M_temp = {arbitrary_int,arbitrary_int,arbitrary_int};	
-	write_back_reg WB_temp = {arbitrary_int}; 
-    
-	core->IF_reg = IF_temp;
-	core->ID_reg = ID_temp;
-	core->E_reg = E_temp;
-	core->M_reg = M_temp;
-	core->WB_reg = WB_temp; */
-	
 	for (int i = 0; i <(1024);i++)
 	{
 		core->data_mem[i] = 0;		
 	}
-	
-	
 	core->data_mem[40*8] = -63; // 40(x1) = -63,
 	core->data_mem[48*8] = 63; // 48(x1) = 63,
 	printf("40(x1) = %d\n", core->data_mem[40*8]);
 	printf("48(x1) = %d\n", core->data_mem[48*8]);
-
-
-	
-
-    // FIXME, initialize data memory here.
-    // core->reg_file[0] = ...
-
-    //set the reg_files for holding the offset
-	 
-	
 	core->reg_file[1] = 0;	 
 	 core->reg_file[0] = 0; 
 	 core->reg_file[2] = 10; //outbase
@@ -51,8 +25,6 @@ Core *initCore(Instruction_Memory *i_mem)
 	 core->reg_file[4] = 20; 
 	 core->reg_file[5] = 30; 
 	 core->reg_file[6] = -35; 
-	 
-	
     return core;
 }
 
@@ -72,7 +44,9 @@ bool tickFunc(Core *core)
 	core->IF_reg.PC = Add(core->PC, 4);	
 	if(core->stages_complete > 2)
 	{
-		Signal mux_output = MUX((E_reg_load.zero_out & E_reg_load.signals.Branch), PC_pls_four, E_reg_load.alu_result);
+		Signal mux_output = MUX((E_reg_load.zero_out & E_reg_load.signals.Branch), PC_pls_four, (E_reg_load.imm_sign_extended + core->PC));
+		printf("the branch bool is -%ld\n", E_reg_load.signals.Branch);
+		printf("the new PC is -%ld\n", core->PC);
 		core->PC = mux_output;	
 	}	
 	// <------------------------ ID Reg	
