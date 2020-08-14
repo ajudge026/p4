@@ -44,17 +44,19 @@ bool tickFunc(Core *core)
 	core->IF_reg.instruction = core->instr_mem->instructions[core->PC / 4].instruction;		
 	if(core->stages_complete > 2)
 	{
-		Signal mux_output = MUX((E_reg_load.zero_out & E_reg_load.signals.Branch), M_reg_load.PC, E_reg_load.branch_address);
-		printf("the branch bool is -%ld\n", E_reg_load.signals.Branch);
+		//Signal mux_output = MUX((E_reg_load.zero_out & E_reg_load.signals.Branch), M_reg_load.PC, E_reg_load.branch_address);// /<---- for testing dont branch
+		Signal mux_output = MUX((E_reg_load.zero_out & ID_reg_load.signals.Branch), (M_reg_load.PC+4), E_reg_load.branch_address);// /<---- for testing dont branch
+		printf("the branch bool is -%ld\n", ID_reg_load.signals.Branch);
 		printf("the new PC is -%ld\n", core->PC);
 		core->PC = mux_output;	
-	}	
-	core->ID_reg = core->IF_reg;
+	}
 	// <------------------------ ID Reg		
 	Signal arbitrary_int = 9999;
 	Signal read_reg_2_value;
 	Signal alu_in_0, alu_in_1;
 	Signal shifted_immediate;
+	core->ID_reg.PC = ID_reg_load.PC;
+	core->E_reg.branch_address = M_reg_load.branch_address;
 	if( core->stages_complete >  0)
 	{
 		// getting control signals
@@ -68,26 +70,27 @@ bool tickFunc(Core *core)
 		core->ID_reg.read_reg_val_2 = core->reg_file[read_reg_2];		
 		core->ID_reg.imm_sign_extended = ImmeGen( input,IF_reg_load.instruction);;	//shifts the immediate?	
 		core->ID_reg.instruction = IF_reg_load.instruction;		
-	}	
-	core->E_reg = core->ID_reg;	
-	if( core->stages_complete > 1 )
+	}
+	core->M_reg.branch_address = WB_reg_load.branch_address;
+	core->E_reg.signals = ID_reg_load.signals;
+	if( core->stages_complete > 1 )// Execute stage
 	{	
 		// <---------------------------------- Execute Reg 
 		 //write to signals (from sequential logic )		 
 		//E_reg_load.signals = ID_reg_load.signals;
-		Signal alu_in_1 = MUX(E_reg_load.signals.ALUSrc,ID_reg_load.read_reg_val_2,ID_reg_load.imm_sign_extended);
+		Signal alu_in_1 = MUX(ID_reg_load.signals.ALUSrc,ID_reg_load.read_reg_val_2,ID_reg_load.imm_sign_extended);
 		alu_in_0 = ID_reg_load.read_reg_val_1;
 		Signal func3 =( (ID_reg_load.instruction >> (7 + 5)) & 7);    
 		Signal func7 = ((ID_reg_load.instruction >> (7 + 5 + 3 + 5 + 5)) & 127);	
 		Signal ALU_ctrl_signal = ALUControlUnit(ID_reg_load.signals.ALUOp, func7, func3);
 		ALU(alu_in_0, alu_in_1, ALU_ctrl_signal, &core->E_reg.alu_result, &core->E_reg.zero_out); // 0 is offset shuold change to imm val		
-		core->E_reg.branch_address = ShiftLeft1(ID_reg_load.imm_sign_extended)+ core->IF_reg.PC ;			
+		printf("%ld + %ld = %ld<----------------------------------\n", alu_in_0, alu_in_1, core->E_reg.alu_result);
+		core->E_reg.branch_address = ShiftLeft1(ID_reg_load.imm_sign_extended)+ ID_reg_load.PC ;			
 		core->E_reg.reg_read_2_val = core->ID_reg.read_reg_val_2 ;
-		core->E_reg.write_reg = ID_reg_load.write_reg;
-		core->ID_reg.signals = E_reg_load.signals;
+		core->E_reg.write_reg = ID_reg_load.write_reg;		
 	}	
 	Signal mem_result;
-	core->M_reg = core->E_reg;		
+	core->M_reg.signals = E_reg_load.signals;	
 	if( core->stages_complete > 2)
 	{
 		// <------------------------ M Reg
@@ -96,22 +99,21 @@ bool tickFunc(Core *core)
 		core->M_reg.mem_read_data 	= mem_result;
 		core->M_reg.alu_result = E_reg_load.alu_result;	
 		core->M_reg.branch_address = 0; // <------------------ change to branch address
-		if(E_reg_load.signals.MemWrite)
+		if(M_reg_load.signals.MemWrite)
 		{       
 			core->data_mem[8*E_reg_load.alu_result] = E_reg_load.reg_read_2_val;		
 		}
 		//Signal write_reg_val =  core->reg_file[E_reg_load.write_reg];		
-		core->M_reg.signals = E_reg_load.signals;
+		//core->M_reg.signals = ID_reg_load.signals;
 		core->M_reg.write_reg = E_reg_load.write_reg;
 	}	
-	//<------------- WB Reg	
-	core->WB_reg = core->M_reg;
+	//<------------- WB Reg		
 	if( core->stages_complete > 3)
 	{
-		core->WB_reg.reg_write_mux_val = MUX(M_reg_load.signals.MemtoReg, M_reg_load.alu_result, mem_result);				
-		if(M_reg_load.signals.RegWrite)
+		core->WB_reg.reg_write_mux_val = MUX(ID_reg_load.signals.MemtoReg, M_reg_load.alu_result, mem_result);				
+		if(ID_reg_load.signals.RegWrite)
 		{			
-			core->reg_file[M_reg_load.write_reg] = core->WB_reg.reg_write_mux_val;
+			core->reg_file[M_reg_load.write_reg] = core->WB_reg.reg_write_mux_val;			
 		}
 	}
 	++core->stages_complete;
