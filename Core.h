@@ -17,6 +17,18 @@ typedef int64_t Register;
 // FIXME. Implement the following functions in Core.c
 // FIXME (1). Control Unit.
 
+
+
+typedef struct ControlSignals
+{
+    Signal Branch;
+    Signal MemRead;
+    Signal MemtoReg;
+    Signal ALUOp;
+    Signal MemWrite;
+    Signal ALUSrc;
+    Signal RegWrite;
+}ControlSignals;
 typedef struct Reg_Signals
 {
     Signal Branch;
@@ -33,15 +45,13 @@ typedef struct Reg_Signals
 	Signal read_reg_val_2;
     Signal imm_sign_extended;	
 	Signal write_reg;
-	Signal instruction;
 	Signal zero_out;
 	Signal branch_address;
-    Signal alu_result;	
 	Signal reg_read_2_val;
     Signal mem_read_data;
 	Signal alu_result;
 	Signal reg_write_mux_val;			
-}ControlSignals;
+}Reg_Signals;
 struct Core;
 typedef struct Core Core;
 typedef struct Core
