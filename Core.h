@@ -16,7 +16,8 @@ typedef int64_t Register;
 
 // FIXME. Implement the following functions in Core.c
 // FIXME (1). Control Unit.
-typedef struct ControlSignals
+
+typedef struct Reg_Signals
 {
     Signal Branch;
     Signal MemRead;
@@ -25,57 +26,22 @@ typedef struct ControlSignals
     Signal MemWrite;
     Signal ALUSrc;
     Signal RegWrite;
-}ControlSignals;
-
-
-typedef struct instruction_fetch_reg
-{    
-	Signal PC_pls_four;
+	Signal PC;
     Signal instruction;
-	ControlSignals signals;
-}instruction_fetch_reg;
-
-
-typedef struct instruction_decode_reg
-{
-	Signal PC_pls_four;
+	ControlSignals signals;	
     Signal read_reg_val_1;
 	Signal read_reg_val_2;
-    Signal imm_sign_extended;
-	Signal PC_pls_four;
+    Signal imm_sign_extended;	
 	Signal write_reg;
 	Signal instruction;
-	ControlSignals signals;
-}instruction_decode_reg;
-
-
-typedef struct execute_reg
-{    
 	Signal zero_out;
 	Signal branch_address;
     Signal alu_result;	
 	Signal reg_read_2_val;
-	Signal write_reg;
-	ControlSignals signals;
-}execute_reg;
-
-
-typedef struct mem_acces_reg
-{
     Signal mem_read_data;
 	Signal alu_result;
-	Signal branch_address;	
-	Signal write_reg;
-	ControlSignals signals;	
-}mem_acces_reg;
-
-
-typedef struct write_back_reg
-{    Signal reg_write_mux_val;		
-	ControlSignals signals;
-	Signal alu_result;
-}write_back_reg;
-
+	Signal reg_write_mux_val;			
+}ControlSignals;
 struct Core;
 typedef struct Core Core;
 typedef struct Core
@@ -92,15 +58,15 @@ typedef struct Core
 
     bool (*tick)(Core *core);
 	
-	instruction_fetch_reg IF_reg;
+	Reg_Signals IF_reg;
 	
-	instruction_decode_reg ID_reg;	
+	Reg_Signals ID_reg;	
 	
-	execute_reg E_reg;
+	Reg_Signals E_reg;
 	
-	mem_acces_reg M_reg;
+	Reg_Signals M_reg;
 	
-	write_back_reg WB_reg;
+	Reg_Signals WB_reg;
 	
 	int stages_complete;
 	
