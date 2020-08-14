@@ -39,12 +39,15 @@ bool tickFunc(Core *core)
 	execute_reg E_reg_load = core->E_reg;	
 	mem_acces_reg M_reg_load = core->M_reg;	
 	write_back_reg WB_reg_load = core->WB_reg;	
+	
 	Signal PC_pls_four = core->PC + 4;	
+	core->IF_reg.PC_pls_four = PC_pls_four;
 	core->IF_reg.instruction = core->instr_mem->instructions[core->PC / 4].instruction;
 	core->IF_reg.PC = Add(core->PC, 4);	
+	core->ID_reg.PC_pls_four = ID_reg_load.PC_pls_four;
 	if(core->stages_complete > 2)
 	{
-		Signal mux_output = MUX((E_reg_load.zero_out & E_reg_load.signals.Branch), PC_pls_four, (E_reg_load.imm_sign_extended + core->PC));
+		Signal mux_output = MUX((E_reg_load.zero_out & E_reg_load.signals.Branch), PC_pls_four, E_reg_load.branch_address);
 		printf("the branch bool is -%ld\n", E_reg_load.signals.Branch);
 		printf("the new PC is -%ld\n", core->PC);
 		core->PC = mux_output;	
@@ -65,7 +68,7 @@ bool tickFunc(Core *core)
 		core->ID_reg.write_reg = (IF_reg_load.instruction >> 7) & 31;
 		core->ID_reg.read_reg_val_1 = core->reg_file[read_reg_1];
 		core->ID_reg.read_reg_val_2 = core->reg_file[read_reg_2];		
-		core->ID_reg.imm_sign_extended = ImmeGen( input,IF_reg_load.instruction);;		
+		core->ID_reg.imm_sign_extended = ImmeGen( input,IF_reg_load.instruction);;	//shifts the immediate?	
 		core->ID_reg.instruction = IF_reg_load.instruction;
 		core->E_reg.signals = ID_reg_load.signals;
 	}		
@@ -78,9 +81,10 @@ bool tickFunc(Core *core)
 		alu_in_0 = ID_reg_load.read_reg_val_1;
 		Signal func3 =( (ID_reg_load.instruction >> (7 + 5)) & 7);    
 		Signal func7 = ((ID_reg_load.instruction >> (7 + 5 + 3 + 5 + 5)) & 127);	
+		//core->E_reg.branch_address = ID_reg_load.PC_pls_four + ID_reg_load.imm_sign_extended;
 		Signal ALU_ctrl_signal = ALUControlUnit(ID_reg_load.signals.ALUOp, func7, func3);
-		ALU(alu_in_0, alu_in_1, ALU_ctrl_signal, &core->E_reg.alu_result, &core->E_reg.zero_out); // 0 is offset shuold change to imm val
-		core->E_reg.alu_result = ID_reg_load.imm_sign_extended + core->IF_reg.PC ;			
+		ALU(alu_in_0, alu_in_1, ALU_ctrl_signal, &core->E_reg.alu_result, &core->E_reg.zero_out); // 0 is offset shuold change to imm val		
+		core->E_reg.branch_address = ShiftLeft1(ID_reg_load.imm_sign_extended)+ core->IF_reg.PC ;			
 		core->E_reg.reg_read_2_val = core->ID_reg.read_reg_val_2 ;
 		core->E_reg.write_reg = ID_reg_load.write_reg;
 		core->ID_reg.signals = E_reg_load.signals;

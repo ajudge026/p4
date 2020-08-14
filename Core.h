@@ -30,7 +30,7 @@ typedef struct ControlSignals
 
 typedef struct instruction_fetch_reg
 {    
-	Signal PC;
+	Signal PC_pls_four;
     Signal instruction;
 	ControlSignals signals;
 }instruction_fetch_reg;
@@ -38,6 +38,7 @@ typedef struct instruction_fetch_reg
 
 typedef struct instruction_decode_reg
 {
+	Signal PC_pls_four;
     Signal read_reg_val_1;
 	Signal read_reg_val_2;
     Signal imm_sign_extended;
@@ -51,6 +52,7 @@ typedef struct instruction_decode_reg
 typedef struct execute_reg
 {    
 	Signal zero_out;
+	Signal branch_address;
     Signal alu_result;	
 	Signal reg_read_2_val;
 	Signal write_reg;
