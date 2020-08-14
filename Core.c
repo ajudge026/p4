@@ -44,7 +44,7 @@ bool tickFunc(Core *core)
 	core->IF_reg.instruction = core->instr_mem->instructions[core->PC / 4].instruction;		
 	if(core->stages_complete > 2)
 	{		
-		Signal mux_output = MUX((E_reg_load.zero_out & ID_reg_load.signals.Branch), (M_reg_load.PC+4), E_reg_load.branch_address);// /<---- for testing dont branch
+		//Signal mux_output = MUX((E_reg_load.zero_out & ID_reg_load.signals.Branch), (M_reg_load.PC+4), E_reg_load.branch_address);// /<---- for testing dont branch
 		Signal mux_output = MUX(0, (ID_reg_load.PC+4), E_reg_load.branch_address);// /<---- for testing dont branch
 		printf("the branch bool is -%ld\n", ID_reg_load.signals.Branch);
 		printf("the new PC is -%ld\n", core->PC);
@@ -81,6 +81,7 @@ bool tickFunc(Core *core)
 		Signal func7 = ((ID_reg_load.instruction >> (7 + 5 + 3 + 5 + 5)) & 127);	
 		Signal ALU_ctrl_signal = ALUControlUnit(ID_reg_load.signals.ALUOp, func7, func3);
 		ALU(alu_in_0, alu_in_1, ALU_ctrl_signal, &core->E_reg.alu_result, &core->E_reg.zero_out); // 0 is offset shuold change to imm val		
+		printf("Alu control - %ld ******************************\n", ALU_ctrl_signal);
 		printf("%ld + %ld = %ld<----------------------------------\n", alu_in_0, alu_in_1, core->E_reg.alu_result);
 		core->E_reg.branch_address = ShiftLeft1(ID_reg_load.imm_sign_extended)+ ID_reg_load.PC ;					
 		core->E_reg.write_reg = ID_reg_load.write_reg;		
@@ -126,8 +127,20 @@ void ControlUnit(unsigned instruction, Signal input,
                  ControlSignals *signals)
 {	
 	Signal func3 = ( (instruction >> (7 + 5)) & 7);
+	Signal func7 = ((instruction >> (7 + 5 + 3 + 5 + 5)) & 127);	
     // For R-type - add
-    if (input == 51 & (func3 == 0)) {
+    if ((input == 51 )&& (func3 == 0) && (func7 == 0)) {
+		//printf("RType\n"); 
+        signals->ALUSrc = 0;
+        signals->MemtoReg = 0;
+        signals->RegWrite = 1;
+        signals->MemRead = 0;
+        signals->MemWrite = 0;
+        signals->Branch = 0;
+        signals->ALUOp = 2;
+    }
+	 // For R-type - sub
+    if (input == 51 & (func3 == 0) && (func7 == 32)) {
 		//printf("RType\n"); 
         signals->ALUSrc = 0;
         signals->MemtoReg = 0;
@@ -247,10 +260,7 @@ Signal ALUControlUnit(Signal ALUOp,
     {
         return 6;
     }
-	//printf("Funct3 - %ld\n", Funct3);
-    //printf("Funct7 - %ld\n", Funct7);
-    //printf("ALUOP - %ld\n", ALUOp);
-    
+	
 }
 
 // FIXME (3). Imme. Generator
@@ -280,11 +290,7 @@ Signal ImmeGen(Signal input, unsigned instruction)
 			Signal immNeg = (instruction >> 31) & 1;
 			Signal imm3 = (instruction >> 24) & 63 ;
 			Signal imm2 = (instruction >> 8) &15;
-			Signal imm1 = (instruction >> 7) &1;
-			//printf("immneg = %d\n", immNeg);
-			//printf("imm3 = %d\n", imm3);
-			//printf("imm2 = %d\n", imm2);
-			//printf("imm1 = %d\n", imm1);
+			Signal imm1 = (instruction >> 7) &1;			
 			immediate = imm2;
 			immediate |= imm3 <<4;
 			immediate |= imm1 <<10;
@@ -302,14 +308,6 @@ Signal ImmeGen(Signal input, unsigned instruction)
 		{
 			immediate = -16;
 		}
-		
-		
-		
-		
-			
-			
-		
-		//printf("unshifted imm - %d\n", immediate);
     }
 	
 
