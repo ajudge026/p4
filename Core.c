@@ -69,7 +69,7 @@ bool tickFunc(Core *core)
 		core->ID_reg.imm_sign_extended = ImmeGen( input,IF_reg_load.instruction);;	//shifts the immediate?	
 		core->ID_reg.instruction = IF_reg_load.instruction;		
 	}	
-	core->E_reg = core->ID_reg;
+	core->E_reg = core->ID_reg;	
 	if( core->stages_complete > 1 )
 	{	
 		// <---------------------------------- Execute Reg 
@@ -87,7 +87,7 @@ bool tickFunc(Core *core)
 		core->ID_reg.signals = E_reg_load.signals;
 	}	
 	Signal mem_result;
-	core->M_reg = core->E_reg;
+	core->M_reg = core->E_reg;		
 	if( core->stages_complete > 2)
 	{
 		// <------------------------ M Reg
@@ -102,7 +102,7 @@ bool tickFunc(Core *core)
 		}
 		//Signal write_reg_val =  core->reg_file[E_reg_load.write_reg];		
 		core->M_reg.signals = E_reg_load.signals;
-		core->M_reg.write_reg = E_reg_load.write_reg
+		core->M_reg.write_reg = E_reg_load.write_reg;
 	}	
 	//<------------- WB Reg	
 	core->WB_reg = core->M_reg;
@@ -114,7 +114,6 @@ bool tickFunc(Core *core)
 			core->reg_file[M_reg_load.write_reg] = core->WB_reg.reg_write_mux_val;
 		}
 	}
-	core->
 	++core->stages_complete;
     ++core->clk;
     // Are we reaching the final instruction?
