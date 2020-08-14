@@ -63,7 +63,8 @@ typedef struct mem_acces_reg
     Signal mem_read_data;
 	Signal alu_result;
 	Signal branch_address;	
-	ControlSignals signals;
+	Signal write_reg;
+	ControlSignals signals;	
 }mem_acces_reg;
 
 

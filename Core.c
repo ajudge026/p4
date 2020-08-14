@@ -124,17 +124,18 @@ bool tickFunc(Core *core)
 		{       
 			core->data_mem[8*E_reg_load.alu_result] = E_reg_load.reg_read_2_val;		
 		}
-		Signal write_reg_val =  core->reg_file[E_reg_load.write_reg];
-		if(E_reg_load.signals.RegWrite)
-		{			
-			core->reg_file[E_reg_load.write_reg] = core->WB_reg.reg_write_mux_val;
-		}
+		//Signal write_reg_val =  core->reg_file[E_reg_load.write_reg];		
 		core->M_reg.signals = E_reg_load.signals;
+		core->M_reg.write_reg = E_reg_load.write_reg
 	}	
 	//<------------- WB Reg	
 	if( core->stages_complete > 3)
 	{
-		core->WB_reg.reg_write_mux_val = MUX(M_reg_load.signals.MemtoReg, M_reg_load.alu_result, mem_result);		
+		core->WB_reg.reg_write_mux_val = MUX(M_reg_load.signals.MemtoReg, M_reg_load.alu_result, mem_result);				
+		if(M_reg_load.signals.RegWrite)
+		{			
+			core->reg_file[M_reg_load.write_reg] = core->WB_reg.reg_write_mux_val;
+		}
 	}
 	++core->stages_complete;
     ++core->clk;
