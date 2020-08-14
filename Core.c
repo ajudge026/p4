@@ -76,7 +76,7 @@ bool tickFunc(Core *core)
 	
 	if(core->stages_complete > 2)
 	{
-		Signal mux_output = MUX((E_reg_load.alu_result & E_reg_load.signals.Branch), ID_reg_load.PC_pls_four, E_reg_load.branch_address);
+		Signal mux_output = MUX((E_reg_load.alu_result & E_reg_load.signals.Branch), ID_reg_load.PC_pls_four, E_reg_load.alu_result);
 		core->PC = mux_output;	
 	}	
 	// <------------------------ ID Reg	
@@ -96,8 +96,9 @@ bool tickFunc(Core *core)
 		core->ID_reg.write_reg = (IF_reg_load.instruction >> 7) & 31;
 
 		core->ID_reg.read_reg_val_1 = core->reg_file[read_reg_1];
-		core->ID_reg.read_reg_val_2 = core->reg_file[read_reg_2];
-		core->ID_reg.imm_sign_extended = ImmeGen( input,ID_reg_load.instruction);;		
+		core->ID_reg.read_reg_val_2 = core->reg_file[read_reg_2];		
+		core->ID_reg.imm_sign_extended = ImmeGen( input,IF_reg_load.instruction);;		
+		core->ID_reg.instruction = IF_reg_load.instruction;
 	}	
 	/* Signal ALU_output;
 	Signal zero_alu_input; */
@@ -105,7 +106,7 @@ bool tickFunc(Core *core)
 	{	
 		// <---------------------------------- Execute Reg 
 		 //write to signals (from sequential logic )		 
-		 
+		E_reg_load.signals = ID_reg_load.signals;
 		Signal alu_in_1 = MUX(E_reg_load.signals.ALUSrc,ID_reg_load.read_reg_val_2,ID_reg_load.imm_sign_extended);
 		alu_in_0 = ID_reg_load.read_reg_val_1;
 		Signal func3 =( (instruction >> (7 + 5)) & 7);    
@@ -122,25 +123,28 @@ bool tickFunc(Core *core)
 	if( core->stages_complete > 2)
 	{
 		// <------------------------ M Reg
+		M_reg_load.signals = E_reg_load.signals;
 		mem_result= 0;
-		mem_result = core->data_mem[8*ALU_output];	
+		mem_result = core->data_mem[8*E_reg_load.alu_result];	
 		core->M_reg.mem_read_data 	= mem_result;
-		core->M_reg.alu_result = ALU_output;	
+		core->M_reg.alu_result = E_reg_load.alu_result;	
 		core->M_reg.branch_address = 0; // <------------------ change to branch address
 		if(M_reg_load.signals.MemWrite)
 		{       
-			core->data_mem[8*ALU_output] = E_reg_load.reg_read_2_val;		
+			core->data_mem[8*E_reg_load.alu_result] = E_reg_load.reg_read_2_val;		
 		}
-		Signal write_reg_val =  core->reg_file[write_reg];
-		if(signals.RegWrite)
+		Signal write_reg_val =  core->reg_file[E_reg_load.write_reg];
+		if(E_reg_load.signals.RegWrite)
 		{			
-			core->reg_file[write_reg] = core->WB_reg.reg_write_mux_val;
+			core->reg_file[E_reg_load.write_reg] = core->WB_reg.reg_write_mux_val;
 		}
+		core->M_reg.signals = E_reg_load.signals;
 	}	
 	//<------------- WB Reg	
 	if( core->stages_complete > 3)
 	{
 		core->WB_reg.reg_write_mux_val = MUX(signals.MemtoReg, ALU_output, mem_result);
+		core->WB_reg.signals = core->E_reg_load.signals;
 	}
 	++core->stages_complete;
     ++core->clk;
