@@ -72,7 +72,7 @@ bool tickFunc(Core *core)
 	core->IF_reg.PC = Add(core->PC, 4);	
 	if(core->stages_complete > 2)
 	{
-		Signal mux_output = MUX((E_reg_load.alu_result & ID_reg_load.signals.Branch), ID_reg_load.PC_pls_four, E_reg_load.alu_result);
+		Signal mux_output = MUX((E_reg_load.zero_out & E_reg_load.signals.Branch), PC_pls_four, E_reg_load.alu_result);
 		core->PC = mux_output;	
 	}	
 	// <------------------------ ID Reg	
@@ -109,7 +109,7 @@ bool tickFunc(Core *core)
 		core->E_reg.alu_result = ID_reg_load.imm_sign_extended + core->IF_reg.PC ;			
 		core->E_reg.reg_read_2_val = core->ID_reg.read_reg_val_2 ;
 		core->E_reg.write_reg = ID_reg_load.write_reg;
-		core->IDreg.signals = E_reg_load.signals;
+		core->ID_reg.signals = E_reg_load.signals;
 	}	
 	Signal mem_result;
 	if( core->stages_complete > 2)
@@ -134,7 +134,7 @@ bool tickFunc(Core *core)
 	//<------------- WB Reg	
 	if( core->stages_complete > 3)
 	{
-		core->WB_reg.reg_write_mux_val = MUX(M_reg_load.signals.MemtoReg, M_reg_load.ALU_result, mem_result);		
+		core->WB_reg.reg_write_mux_val = MUX(M_reg_load.signals.MemtoReg, M_reg_load.alu_result, mem_result);		
 	}
 	++core->stages_complete;
     ++core->clk;
