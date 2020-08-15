@@ -96,12 +96,9 @@ bool tickFunc(Core *core)
 		mem_result = core->data_mem[8*E_reg_load.alu_result];	
 		if (mem_result > 128)
 		{
-			Byte mem_result_temp = mem_result;						
-			if (mem_result_temp > 128)
-			{
+			Byte mem_result_temp = mem_result;									
 				mem_result_temp = ~(mem_result_temp - 1);
-				mem_result = -1 * mem_result_temp;
-			}
+				mem_result = -1 * mem_result_temp;			
 		}
 		core->M_reg.mem_read_data 	= mem_result;
 		core->M_reg.alu_result = E_reg_load.alu_result;	
