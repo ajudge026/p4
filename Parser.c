@@ -96,6 +96,13 @@ void parseRType(char *opr, Instruction *instr)
         funct3 = 0;
         funct7 = 0;
     }
+
+	if (strcmp(opr, "sub") == 0)
+	{
+	opcode = 51;
+	funct3 = 0;
+	funct7 = 32;
+	}
 	
 	if (strcmp(opr, "sll") == 0)
     {
