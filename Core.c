@@ -61,37 +61,29 @@ bool tickFunc(Core *core)
 		// getting control signals
 		Signal input = (IF_reg_load.instruction & 127);
 		//ControlSignals signals;
-		ControlUnit(IF_reg_load.instruction, input, &core->ID_reg.signals);			
-		Register read_reg_1 = (IF_reg_load.instruction >> (7 + 5 + 3)) & 31;    
-		Register read_reg_2 = (IF_reg_load.instruction >> (7 + 5 + 3 + 5)) & 31;	
+		ControlUnit(IF_reg_load.instruction, input, &core->ID_reg.signals);	
 		core->ID_reg.write_reg = (IF_reg_load.instruction >> 7) & 31;
-		core->ID_reg.read_reg_val_1 = core->reg_file[read_reg_1];
-		core->ID_reg.read_reg_val_2 = core->reg_file[read_reg_2];		
+		core->ID_reg.read_reg_val_1 = core->reg_file[(IF_reg_load.instruction >> (7 + 5 + 3)) & 31];
+		core->ID_reg.read_reg_val_2 = core->reg_file[(IF_reg_load.instruction >> (7 + 5 + 3 + 5)) & 31];		
 		core->ID_reg.imm_sign_extended = ImmeGen( input,IF_reg_load.instruction);;	//shifts the immediate?	
 		core->ID_reg.instruction = IF_reg_load.instruction;		
 	}
 	core->M_reg.branch_address = WB_reg_load.branch_address;
 	core->E_reg.signals = ID_reg_load.signals;	
+	core->E_reg.read_reg_val_2 = ID_reg_load.read_reg_val_2;	
 	if( core->stages_complete > 1 )// Execute stage
 	{	
 		// <---------------------------------- Execute Reg 
-		 //write to signals (from sequential logic )		 
-		//E_reg_load.signals = ID_reg_load.signals;
 		Signal alu_in_1 = MUX(ID_reg_load.signals.ALUSrc,ID_reg_load.read_reg_val_2,ID_reg_load.imm_sign_extended);
 		alu_in_0 = ID_reg_load.read_reg_val_1;
 		Signal func3 =( (ID_reg_load.instruction >> (7 + 5)) & 7);    
 		Signal func7 = ((ID_reg_load.instruction >> (7 + 5 + 3 + 5 + 5)) & 127);	
 		Signal ALU_ctrl_signal = ALUControlUnit(ID_reg_load.signals.ALUOp, func7, func3);
-		printf("Alu op - %ld ******************************\n", ID_reg_load.signals.ALUOp);
-		printf("funct7- %ld ******************************\n", func7);
-		printf("funct3 - %ld ******************************\n", func3);
 		if(core->stages_complete == 6)
 		{			
 			printf("ld instructions from ID_reg = %ld@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n",ID_reg_load.instruction );
 		}
 		ALU(alu_in_0, alu_in_1, ALU_ctrl_signal, &core->E_reg.alu_result, &core->E_reg.zero_out); // 0 is offset shuold change to imm val		
-		printf("the immediate is  - %ld ******************************\n",ID_reg_load.imm_sign_extended );
-		printf("%ld + %ld = %ld<----------------------------------\n", alu_in_0, alu_in_1, core->E_reg.alu_result);
 		core->E_reg.branch_address = ShiftLeft1(ID_reg_load.imm_sign_extended)+ ID_reg_load.PC ;					
 		core->E_reg.write_reg = ID_reg_load.write_reg;		
 	}	
@@ -106,23 +98,18 @@ bool tickFunc(Core *core)
 		printf("the mem index is -%ld\n", E_reg_load.alu_result);
 		core->M_reg.mem_read_data 	= mem_result;
 		core->M_reg.alu_result = E_reg_load.alu_result;	
-		core->M_reg.branch_address = 0; // <------------------ change to branch address
-		printf("$s = %ldn",VariableName(E_reg_load.signals.MemWrite), E_reg_load.signals.MemWrite );
+		core->M_reg.branch_address = 0; // <------------------ change to branch address		
 		if(E_reg_load.signals.MemWrite)
 		{       
 			core->data_mem[8*E_reg_load.alu_result] = E_reg_load.read_reg_val_2;		
 		}		core->M_reg.write_reg = E_reg_load.write_reg;
 	}	
-	//<------------- WB Reg		
-	
+	//<------------- WB Reg			
 	if( core->stages_complete > 3)
-	{
-		printf("the branch sig is -%ld\n", M_reg_load.signals.RegWrite);
-		core->WB_reg.reg_write_mux_val = MUX(ID_reg_load.signals.MemtoReg, M_reg_load.alu_result, mem_result);				
-		
+	{		
+		core->WB_reg.reg_write_mux_val = MUX(M_reg_load.signals.MemtoReg, M_reg_load.alu_result, mem_result);						
 		if(M_reg_load.signals.RegWrite)
-		{			
-			
+		{						
 			core->reg_file[M_reg_load.write_reg] = core->WB_reg.reg_write_mux_val;			
 		}
 	}
@@ -130,15 +117,18 @@ bool tickFunc(Core *core)
 	{
 		++core->stages_after_last_PC;
 	}
-	printf("$s = %ldn",VariableName(core->data_mem[40*8]),core->data_mem[40*8] );	
-	printf("reg x10 = %ld#####################################################\n",core->reg_file[10]);
-	printf("Stages complete = %d#####################################################\n",core->stages_complete);
-	
+	printf("Stages complete = %d#####################################################\n",core->stages_complete);	
+	printf("Sol = $$$$$$$$$$$$$$$$$$$!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
 	++core->stages_complete;
     ++core->clk;
     // Are we reaching the final instruction?
     if (core->stages_after_last_PC > 1)
     {
+		printf("%s = %ld\n",VariableName(core->reg_file[10]),core->reg_file[10] );
+		printf("%s = %ld\n",VariableName(core->reg_file[11]),core->reg_file[11] );
+		printf("%s = %ld\n",VariableName(core->reg_file[12]),core->reg_file[12] );
+		printf("%s = %ld\n",VariableName(core->reg_file[13]),core->reg_file[13] );
+		printf("%s = %ld\n",VariableName(core->reg_file[14]),core->reg_file[14] );
         return false;
     }
     return true;
