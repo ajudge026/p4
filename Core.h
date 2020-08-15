@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
+#define VariableName(name) #name
 
 #define BOOL bool
 
@@ -80,7 +81,7 @@ typedef struct Core
 	
 	int stages_complete;
 	
-	int stages_after_last_PC
+	int stages_after_last_PC;
 	
 }Core;
 

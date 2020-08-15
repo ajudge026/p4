@@ -16,6 +16,7 @@ Core *initCore(Instruction_Memory *i_mem)
 		core->data_mem[i] = 0;		
 	}
 	core->data_mem[40*8] = -63; // 40(x1) = -63,
+	core->data_mem[40*8] = 2; // 40(x1) = 2 test
 	core->data_mem[48*8] = 63; // 48(x1) = 63,
 	printf("40(x1) = %d\n", core->data_mem[40*8]);
 	printf("48(x1) = %d\n", core->data_mem[48*8]);
@@ -101,16 +102,16 @@ bool tickFunc(Core *core)
 		// <------------------------ M Reg
 		mem_result= 0;
 		mem_result = core->data_mem[8*E_reg_load.alu_result];	
+		printf("the mem result  is -%ld\n", mem_result);
+		printf("the mem index is -%ld\n", E_reg_load.alu_result);
 		core->M_reg.mem_read_data 	= mem_result;
 		core->M_reg.alu_result = E_reg_load.alu_result;	
 		core->M_reg.branch_address = 0; // <------------------ change to branch address
+		printf("$s = %ldn",VariableName(E_reg_load.signals.MemWrite), E_reg_load.signals.MemWrite );
 		if(E_reg_load.signals.MemWrite)
 		{       
 			core->data_mem[8*E_reg_load.alu_result] = E_reg_load.read_reg_val_2;		
-		}
-		//Signal write_reg_val =  core->reg_file[E_reg_load.write_reg];		
-		//core->M_reg.signals = ID_reg_load.signals;
-		core->M_reg.write_reg = E_reg_load.write_reg;
+		}		core->M_reg.write_reg = E_reg_load.write_reg;
 	}	
 	//<------------- WB Reg		
 	
@@ -129,8 +130,9 @@ bool tickFunc(Core *core)
 	{
 		++core->stages_after_last_PC;
 	}
-	printf("reg x11 = %ld#####################################################\n",core->reg_file[11]);
-	printf("Stages complete = %ld#####################################################\n",core->stages_complete);
+	printf("$s = %ldn",VariableName(core->data_mem[40*8]),core->data_mem[40*8] );	
+	printf("reg x10 = %ld#####################################################\n",core->reg_file[10]);
+	printf("Stages complete = %d#####################################################\n",core->stages_complete);
 	
 	++core->stages_complete;
     ++core->clk;
