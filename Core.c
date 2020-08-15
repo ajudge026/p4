@@ -9,6 +9,7 @@ Core *initCore(Instruction_Memory *i_mem)
     core->instr_mem = i_mem;
     core->tick = tickFunc;	
 	core->stages_complete = 0;
+	core->stages_after_last_PC = 0;
 	Signal	arbitrary_int = 9999;
 	for (int i = 0; i <(1024);i++)
 	{
@@ -112,14 +113,21 @@ bool tickFunc(Core *core)
 		core->M_reg.write_reg = E_reg_load.write_reg;
 	}	
 	//<------------- WB Reg		
+	
 	if( core->stages_complete > 3)
 	{
+		printf("the branch sig is -%ld\n", M_reg_load.signals.RegWrite);
 		core->WB_reg.reg_write_mux_val = MUX(ID_reg_load.signals.MemtoReg, M_reg_load.alu_result, mem_result);				
+		
 		if(M_reg_load.signals.RegWrite)
 		{			
 			
 			core->reg_file[M_reg_load.write_reg] = core->WB_reg.reg_write_mux_val;			
 		}
+	}
+	if(core->PC > core->instr_mem->last->addr)
+	{
+		++core->stages_after_last_PC;
 	}
 	printf("reg x11 = %ld#####################################################\n",core->reg_file[11]);
 	printf("Stages complete = %ld#####################################################\n",core->stages_complete);
@@ -127,7 +135,7 @@ bool tickFunc(Core *core)
 	++core->stages_complete;
     ++core->clk;
     // Are we reaching the final instruction?
-    if (core->PC > core->instr_mem->last->addr)
+    if (core->stages_after_last_PC > 1)
     {
         return false;
     }

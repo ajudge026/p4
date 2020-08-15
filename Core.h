@@ -80,6 +80,8 @@ typedef struct Core
 	
 	int stages_complete;
 	
+	int stages_after_last_PC
+	
 }Core;
 
 
