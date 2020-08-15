@@ -80,8 +80,15 @@ bool tickFunc(Core *core)
 		Signal func3 =( (ID_reg_load.instruction >> (7 + 5)) & 7);    
 		Signal func7 = ((ID_reg_load.instruction >> (7 + 5 + 3 + 5 + 5)) & 127);	
 		Signal ALU_ctrl_signal = ALUControlUnit(ID_reg_load.signals.ALUOp, func7, func3);
+		printf("Alu op - %ld ******************************\n", ID_reg_load.signals.ALUOp);
+		printf("funct7- %ld ******************************\n", func7);
+		printf("funct3 - %ld ******************************\n", func3);
+		if(core->stages_complete == 6)
+		{			
+			printf("ld instructions from ID_reg = %ld@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n",ID_reg_load.instruction );
+		}
 		ALU(alu_in_0, alu_in_1, ALU_ctrl_signal, &core->E_reg.alu_result, &core->E_reg.zero_out); // 0 is offset shuold change to imm val		
-		printf("Alu control - %ld ******************************\n", ALU_ctrl_signal);
+		printf("the immediate is  - %ld ******************************\n",ID_reg_load.imm_sign_extended );
 		printf("%ld + %ld = %ld<----------------------------------\n", alu_in_0, alu_in_1, core->E_reg.alu_result);
 		core->E_reg.branch_address = ShiftLeft1(ID_reg_load.imm_sign_extended)+ ID_reg_load.PC ;					
 		core->E_reg.write_reg = ID_reg_load.write_reg;		
@@ -96,7 +103,7 @@ bool tickFunc(Core *core)
 		core->M_reg.mem_read_data 	= mem_result;
 		core->M_reg.alu_result = E_reg_load.alu_result;	
 		core->M_reg.branch_address = 0; // <------------------ change to branch address
-		if(M_reg_load.signals.MemWrite)
+		if(E_reg_load.signals.MemWrite)
 		{       
 			core->data_mem[8*E_reg_load.alu_result] = E_reg_load.read_reg_val_2;		
 		}
@@ -108,11 +115,15 @@ bool tickFunc(Core *core)
 	if( core->stages_complete > 3)
 	{
 		core->WB_reg.reg_write_mux_val = MUX(ID_reg_load.signals.MemtoReg, M_reg_load.alu_result, mem_result);				
-		if(ID_reg_load.signals.RegWrite)
+		if(M_reg_load.signals.RegWrite)
 		{			
+			
 			core->reg_file[M_reg_load.write_reg] = core->WB_reg.reg_write_mux_val;			
 		}
 	}
+	printf("reg x11 = %ld#####################################################\n",core->reg_file[11]);
+	printf("Stages complete = %ld#####################################################\n",core->stages_complete);
+	
 	++core->stages_complete;
     ++core->clk;
     // Are we reaching the final instruction?
@@ -139,7 +150,7 @@ void ControlUnit(unsigned instruction, Signal input,
         signals->Branch = 0;
         signals->ALUOp = 2;
     }
-	 // For R-type - sub
+	// For R-type - sub
     if (input == 51 & (func3 == 0) && (func7 == 32)) {
 		//printf("RType\n"); 
         signals->ALUSrc = 0;
@@ -150,8 +161,6 @@ void ControlUnit(unsigned instruction, Signal input,
         signals->Branch = 0;
         signals->ALUOp = 2;
     }
-	
-	
 	// For R-type - sll
     if (input == 51 & (func3 == 1)) {
 		//printf("RType\n"); 
@@ -270,8 +279,7 @@ Signal ImmeGen(Signal input, unsigned instruction)
 
     //ld
     if (input == 3){
-        // 000000000000;
-        immediate = 0;
+        immediate = (instruction >> 20)&4095;
     }
     //addi
     if (input == 19){
