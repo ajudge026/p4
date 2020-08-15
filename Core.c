@@ -16,8 +16,7 @@ Core *initCore(Instruction_Memory *i_mem)
 		core->data_mem[i] = 0;		
 	}
 	core->data_mem[40*8] = -63; // 40(x1) = -63,
-	core->data_mem[40*8] = 2; // 40(x1) = 2 test
-	core->data_mem[48*8] = 63; // 48(x1) = 63,
+	core->data_mem[40*8] = 63; // 40(x1) = 2 test
 	printf("40(x1) = %d\n", core->data_mem[40*8]);
 	printf("48(x1) = %d\n", core->data_mem[48*8]);
 	core->reg_file[1] = 0;	 
@@ -40,14 +39,15 @@ bool tickFunc(Core *core)
 	Reg_Signals ID_reg_load = core->ID_reg;		
 	Reg_Signals E_reg_load = core->E_reg;	
 	Reg_Signals M_reg_load = core->M_reg;		
-	Reg_Signals WB_reg_load = core->WB_reg;		
+	Reg_Signals WB_reg_load = core->WB_reg;	
+	Signal num_instructions = (core->instr_mem->last->addr /4) + 1;	
 	if( (core->stages_complete < (num_instructions )))
 	{
 		core->IF_reg.PC = core->PC;
 		core->IF_reg.instruction = core->instr_mem->instructions[core->PC / 4].instruction;			
-		printf("+++++++++++++++++++++++++The IF_reg variables++++++++++++++++++++++++++++++++");
+		/* printf("+++++++++++++++++++++++++The IF_reg variables++++++++++++++++++++++++++++++++\n");
 		printf("%s = %ld\n",VariableName(core->PC),core->PC);
-		printf("%s = %ld\n",VariableName(core->IF_reg.instruction ),core->IF_reg.instruction );
+		printf("%s = %ld\n",VariableName(core->IF_reg.instruction ),core->IF_reg.instruction ); */
 		core->PC = core->PC + 4;	
 	}
 	// <------------------------ ID Reg				
@@ -57,7 +57,7 @@ bool tickFunc(Core *core)
 	if( (core->stages_complete >  0) && (core->stages_complete < (num_instructions + 1)))
 	{
 		// getting control signals
-		Signal input = (IF_reg_load.instruction & 127);
+		Signal input = (IF_reg_load.instruction & 127);		
 		//ControlSignals signals;
 		ControlUnit(IF_reg_load.instruction, input, &core->ID_reg.signals);	
 		core->ID_reg.write_reg = (IF_reg_load.instruction >> 7) & 31;
@@ -65,6 +65,12 @@ bool tickFunc(Core *core)
 		core->ID_reg.read_reg_val_2 = core->reg_file[(IF_reg_load.instruction >> (7 + 5 + 3 + 5)) & 31];		
 		core->ID_reg.imm_sign_extended = ImmeGen( input,IF_reg_load.instruction);;	//shifts the immediate?	
 		core->ID_reg.instruction = IF_reg_load.instruction;		
+		/* printf("+++++++++++++++++++++++++The ID_reg variables++++++++++++++++++++++++++++++++\n");
+		printf("%s = %ld\n",VariableName(IF_reg_load.instruction),IF_reg_load.instruction);
+		printf("%s = %d\n",VariableName(core->ID_reg.signals),core->ID_reg.signals);
+		printf("%s = %ld\n",VariableName(core->ID_reg.read_reg_val_1),core->ID_reg.read_reg_val_1);		
+		printf("%s = %ld\n",VariableName(core->ID_reg.read_reg_val_2),core->ID_reg.read_reg_val_2);				
+		printf("%s = %ld\n",VariableName(core->ID_reg.imm_sign_extended),core->ID_reg.imm_sign_extended);	 */	
 	}
 	core->M_reg.branch_address = WB_reg_load.branch_address;
 	core->E_reg.signals = ID_reg_load.signals;	
@@ -76,40 +82,50 @@ bool tickFunc(Core *core)
 		alu_in_0 = ID_reg_load.read_reg_val_1;
 		Signal func3 =( (ID_reg_load.instruction >> (7 + 5)) & 7);    
 		Signal func7 = ((ID_reg_load.instruction >> (7 + 5 + 3 + 5 + 5)) & 127);	
-		Signal ALU_ctrl_signal = ALUControlUnit(ID_reg_load.signals.ALUOp, func7, func3);
-		if(core->stages_complete == 6)
-		{			
-			printf("ld instructions from ID_reg = %ld@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n",ID_reg_load.instruction );
-		}
+		Signal ALU_ctrl_signal = ALUControlUnit(ID_reg_load.signals.ALUOp, func7, func3);		
 		ALU(alu_in_0, alu_in_1, ALU_ctrl_signal, &core->E_reg.alu_result, &core->E_reg.zero_out); // 0 is offset shuold change to imm val		
 		core->E_reg.branch_address = ShiftLeft1(ID_reg_load.imm_sign_extended)+ ID_reg_load.PC ;					
-		core->E_reg.write_reg = ID_reg_load.write_reg;		
+		core->E_reg.write_reg = ID_reg_load.write_reg;	
 	}	
 	Signal mem_result;
 	core->M_reg.signals = E_reg_load.signals;	
 	if( (core->stages_complete > 2) && (core->stages_complete < num_instructions + 3) )
 	{
 		// <------------------------ M Reg
-		mem_result= 0;
+		mem_result= 0;		
 		mem_result = core->data_mem[8*E_reg_load.alu_result];	
-		printf("the mem result  is -%ld\n", mem_result);
-		printf("the mem index is -%ld\n", E_reg_load.alu_result);
+		if (mem_result > 128)
+		{
+			Byte mem_result_temp = mem_result;						
+			if (mem_result_temp > 128)
+			{
+				mem_result_temp = ~(mem_result_temp - 1);
+				mem_result = -1 * mem_result_temp;
+			}
+		}
 		core->M_reg.mem_read_data 	= mem_result;
 		core->M_reg.alu_result = E_reg_load.alu_result;	
 		core->M_reg.branch_address = 0; // <------------------ change to branch address		
 		if(E_reg_load.signals.MemWrite)
 		{       
 			core->data_mem[8*E_reg_load.alu_result] = E_reg_load.read_reg_val_2;		
-		}		core->M_reg.write_reg = E_reg_load.write_reg;
+		}
+		core->M_reg.write_reg = E_reg_load.write_reg;		
 	}	
 	//<------------- WB Reg			
 	if( (core->stages_complete > 3) && (core->stages_complete < num_instructions + 4 ) )
 	{		
-		core->WB_reg.reg_write_mux_val = MUX(M_reg_load.signals.MemtoReg, M_reg_load.alu_result, mem_result);						
+		core->WB_reg.reg_write_mux_val = MUX(M_reg_load.signals.MemtoReg, M_reg_load.alu_result, M_reg_load.mem_read_data);						
 		if(M_reg_load.signals.RegWrite)
 		{						
 			core->reg_file[M_reg_load.write_reg] = core->WB_reg.reg_write_mux_val;			
 		}
+		//printf("%s = %ld\n",VariableName(),);
+		printf("+++++++++++++++++++++++++The WB _reg variables++++++++++++++++++++++++++++++++\n");
+		printf("%s = %ld\n",VariableName(M_reg_load.signals.MemtoReg),M_reg_load.signals.MemtoReg);
+		printf("%s = %ld\n",VariableName(M_reg_load.alu_result),M_reg_load.alu_result);
+		printf("%s = %ld\n",VariableName(M_reg_load.signals.RegWrite),M_reg_load.signals.RegWrite);
+		printf("%s = %ld\n",VariableName(core->WB_reg.reg_write_mux_val),core->WB_reg.reg_write_mux_val);
 	}
 	printf("Stages complete = %d#####################################################\n",core->stages_complete);	
 	printf("Sol = $$$$$$$$$$$$$$$$$$$!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
@@ -118,11 +134,10 @@ bool tickFunc(Core *core)
 	printf("%s = %ld\n",VariableName(core->reg_file[12]),core->reg_file[12] );
 	printf("%s = %ld\n",VariableName(core->reg_file[13]),core->reg_file[13] );
 	printf("%s = %ld\n",VariableName(core->reg_file[14]),core->reg_file[14] );
-	printf("%s = %d\n",VariableName(core->PC),core->PC );
+	printf("%s = %ld\n",VariableName(core->PC),core->PC );
 	++core->stages_complete;
     ++core->clk;
     // Are we reaching the final instruction?
-	Signal num_instructions = (core->instr_mem->last->addr /4) + 1;
 	printf("%s = %ld\n",VariableName(num_instructions), num_instructions);
     if (core->stages_complete > num_instructions + 4 )
     {		
@@ -276,7 +291,16 @@ Signal ImmeGen(Signal input, unsigned instruction)
 
     //ld
     if (input == 3){
-        immediate = (instruction >> 20)&4095;
+        Byte immediate_1;
+		immediate =  (instruction >> 20)&4095;
+		immediate_1 = immediate;
+		if (immediate_1 > 128)
+		{
+			immediate_1 = ~(immediate_1 - 1);
+			immediate = -1 * immediate_1;
+		}
+		
+		
     }
     //addi
     if (input == 19){
