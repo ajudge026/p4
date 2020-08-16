@@ -93,7 +93,7 @@ bool tickFunc(Core *core)
 	{
 		// <------------------------ M Reg
 		mem_result= 0;		
-		mem_result = core->data_mem[8*E_reg_load.alu_result];	
+		mem_result = core->data_mem[8*E_reg_load.alu_result];s		
 		if (mem_result > 128)
 		{
 			Byte mem_result_temp = mem_result;									
@@ -118,11 +118,11 @@ bool tickFunc(Core *core)
 			core->reg_file[M_reg_load.write_reg] = core->WB_reg.reg_write_mux_val;			
 		}
 		//printf("%s = %ld\n",VariableName(),);
-		printf("+++++++++++++++++++++++++The WB _reg variables++++++++++++++++++++++++++++++++\n");
-		printf("%s = %ld\n",VariableName(M_reg_load.signals.MemtoReg),M_reg_load.signals.MemtoReg);
-		printf("%s = %ld\n",VariableName(M_reg_load.alu_result),M_reg_load.alu_result);
-		printf("%s = %ld\n",VariableName(M_reg_load.signals.RegWrite),M_reg_load.signals.RegWrite);
-		printf("%s = %ld\n",VariableName(core->WB_reg.reg_write_mux_val),core->WB_reg.reg_write_mux_val);
+		//printf("+++++++++++++++++++++++++The WB _reg variables++++++++++++++++++++++++++++++++\n");
+		//printf("%s = %ld\n",VariableName(M_reg_load.signals.MemtoReg),M_reg_load.signals.MemtoReg);
+		//printf("%s = %ld\n",VariableName(M_reg_load.alu_result),M_reg_load.alu_result);
+		//printf("%s = %ld\n",VariableName(M_reg_load.signals.RegWrite),M_reg_load.signals.RegWrite);
+		//printf("%s = %ld\n",VariableName(core->WB_reg.reg_write_mux_val),core->WB_reg.reg_write_mux_val);
 	}
 	printf("Stages complete = %d#####################################################\n",core->stages_complete);	
 	printf("Sol = $$$$$$$$$$$$$$$$$$$!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
