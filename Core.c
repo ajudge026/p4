@@ -126,7 +126,7 @@ bool tickFunc(Core *core)
 	}
 	printf("Stages complete = %d\n",core->stages_complete);	
 	printf("REG FILES\n");
-	printf("%s = %ld\n",VariableName(++core->clk),++core->clk);
+	printf("%s = %ld\n",VariableName(core->clk),core->clk);
 	printf("%s = %ld\n",VariableName(core->reg_file[10]),core->reg_file[10] );
 	printf("%s = %ld\n",VariableName(core->reg_file[11]),core->reg_file[11] );
 	printf("%s = %ld\n",VariableName(core->reg_file[12]),core->reg_file[12] );
