@@ -124,7 +124,7 @@ bool tickFunc(Core *core)
 		//printf("%s = %ld\n",VariableName(M_reg_load.signals.RegWrite),M_reg_load.signals.RegWrite);
 		//printf("%s = %ld\n",VariableName(core->WB_reg.reg_write_mux_val),core->WB_reg.reg_write_mux_val);
 	}
-	printf("--------------------------------------------\n",core->stages_complete);	
+	printf("--------------------------------------------\n");	
 	printf("Clock cycles = %d\n",core->stages_complete);	
 	printf("REG FILES\n");	
 	printf("%s = %ld\n",VariableName(core->reg_file[10]),core->reg_file[10] );
